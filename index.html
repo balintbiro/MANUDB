@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>MANUDB</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Webpage design and content of MANUDB.">
+  <meta name="author" content="Bálint Biró">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles.css">
+  <script src="dynamic_functions.js">
+  </script>
+</head>
+<body>
+  <!--Title element inside div-->
+  <div>
+    <h1 class="main_title" id="title">
+      MANUDB<br>MAmmalian NUclear mitochondrial sequences DataBase
+    </h1>
+  </div>
+
+  <div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+    <a href="#">Home</a>
+    <a href="#">Team</a>
+  </div>
+  
+  <div id="main">
+    <button class="openbtn" onclick="openNav()" id="openbtn">☰</button>
+  </div>
+  <!--The first paragraph about the background of the database in div-->
+  <div id="first_paragraph">
+    <h1 class="section_title">
+      The background of MANUDB
+    </h1>
+    <p class="text">
+      There is an ongoing process in which mitochondrial sequences are being integrated into the nuclear genome.
+      These sequences are called NUclear MiTochondrial sequences (NUMTs).
+      The importance of NUMTs has already been revealed in cancer biology, forensic, phylogenetic studies and in the evolution of the eukaryotic genetic information.
+      Human and numerous model organisms’ genomes were described from the NUMTs point of view.
+      Furthermore, recent studies were published on the patterns of these nuclear localised mitochondrial sequences in different taxa.
+      However, the results of the previously released studies are difficult to compare due to the lack of standardised methods and/or using few numbers of genomes.
+      To overcome this limitations, our group has already published a computational pipeline to mine NUMTs.
+      Therefore, our goal with MANUDB is to store, visualize and make NUMTs accessible that were mined with our workflow.
+    </p>
+  </div>
+  <!--The second paragraph about the current status of the database in div-->
+  <div id="second_paragraph">
+    <h1 class="section_title">
+      The current status of MANUDB
+    </h1>
+    <p class="text">
+      MANUDB currently contains NUMTs derived from 153 mammalian genomes of NCBI. These 153 genomes belong to 20 taxonomical orders.
+    </p>
+  </div>
+  <!--The third paragraph about the different functionalities of the database in div-->
+  <div id="third_paragraph">
+    <h1 class="section_title">
+      The functionalities of MANUDB
+    </h1>
+    <p class="text">
+      MANUDB supports the retrieval of species specific datasets into a format based on the end user's preference. Furthermore, MANUDB makes specific specific NUMT visualizations accessible in downloadable format.
+    </p>
+  </div>
+  <!--The fourth paragraph about the different methods used during the creation of the database in div-->
+  <div id="fourth_paragraph">
+    <h1 class="section_title">
+      The methods used during the creation of MANUDB
+    </h1>
+      <h2 class="section_title">
+        Genome curation
+      </h2>
+        <p class="text">
+          A total number of 153 nuclear and mtDNA genomes were analysed.
+          All the reference nuclear and mtDNA genome sequences were acquired from the FTP site of NCBI.
+          Taxonomical related data is also from NCBI data source.
+        </p>
+      <h2 class="section_title">
+        Sequence alignments
+      </h2>
+        <p class="text">
+          The sequence alignment of the corresponding genomes was performed using LASTAL (v.: v1219)
+          [64] with the settings and e value threshold as it has been described beforehand [65].
+          We chose LASTAL since it is believed to provide more accurate results for e value calculations
+          than other widely used methods [65]. The sequence alignments of the 153 genomes resulted in 79 645 NUMTs.
+          While the multiple sequence alignment of the mitochondrial sequences for the phylogenetic tree construction
+          was performed with ClustalO (v.: 1.2.4) [66] with default parameters. Repetitive elements
+          were investigated with RepeatMasker (v.: 4.1.2.p1) [67] using species specific settings.
+        </p>
+      <h2 class="section_title">
+        Phylogenetic tree construction
+      </h2>
+        <p class="text">
+          Ape (v.: 5.6-2) [71] and phangorn (v.: 2.10.0) [72] libraries were used during phylogenetic analysis.
+          The consensus phylogenetic tree was constructed from a bootstrap dataset with 100 bootstrap
+          iterations using the GTR nucleic acid substitution model for optimizing the JC69 model.
+        </p>
+  </div>
+</body>
+</html>
