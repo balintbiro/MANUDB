@@ -14,6 +14,8 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import RandomizedSearchCV
+import pickle
 
 def seq_reader(filepath:str,label:str)->None:
     global headers,seqs,labels
@@ -193,3 +195,48 @@ radar_plot(
 )
 plt.tight_layout()
 plt.savefig('../results/radar_plot.png',dpi=800)
+
+param_dist={
+    'min_child_weight': [1, 5, 10,100] ,
+   'gamma': [0.5 , 1, 1.5 , 2, 5],
+   'subsample': [0.6 , 0.8 , 1.0] ,
+   'colsample_bytree': [0.6 , 0.8 , 1.0] ,
+   'max_depth': [1,2,3, 4, 5,10,100],
+   'alpha':[1,10,50,100,1000]
+}
+search=RandomizedSearchCV(
+    estimator=xgboost.XGBClassifier(),
+    param_distributions=param_dist,
+    scoring=('roc_auc','f1','accuracy','precision','recall'),
+    n_iter=80,
+    refit='roc_auc'
+)
+
+cv=search.fit(X,y)
+
+cv_res=cross_validate(
+    estimator=cv.best_estimator_,
+    X=X,y=y,scoring=('roc_auc','f1','accuracy','precision','recall'),cv=10
+)
+
+cv_res=pd.DataFrame(cv_res)
+cv_res['model']='XGB'
+cv_res=cv_res.groupby(by='model').median().reset_index(drop=True).drop(columns=['fit_time','score_time'])
+cv_res['model']='optimized XGB'
+
+optim_res=pd.concat([
+    model_results_ready[model_results_ready['model']=='XGB'],
+    cv_res
+])
+optim_res['model']=optim_res['model'].replace('XGB','default XGB')
+
+fig=radar_plot(
+    categories=optim_res.drop(columns=['model']).columns.str.replace('_',' ').str.replace('test ','').str.capitalize(),
+    input_df=optim_res.drop(columns=['model']),
+    names=optim_res['model'].values,
+    to_be_higlighted='optimized XGB'
+)
+plt.tight_layout()
+plt.savefig('../results/optimized_radar_plot.png',dpi=800)
+
+pickle.dump(best,open('../results/trained_xgboost.pkl','wb'))#<->trained_model=pickle.load(open('../results/trained_xgboost.pkl','rb'))
