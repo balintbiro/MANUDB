@@ -14,7 +14,14 @@ optimization=pd.DataFrame([
 ],columns=['AUROC','F1','Accuracy','Precision','Recall','Jaccard'])
 optimization['model']=['Optim','Def']
 
-def radar_plot(categories:list,input_df:pd.DataFrame,names:list,to_be_higlighted:str,lim:tuple,ax:None,legend_pos:tuple)->None:
+plt.figure(figsize=(6.7, 8))
+ax1 = plt.subplot(3,2,1)
+ax2 = plt.subplot(3,2,2)
+ax3 = plt.subplot(3,2,3,polar=True)
+ax4 = plt.subplot(3,2,4,polar=True)
+ax5 = plt.subplot(3,1,3)
+
+def radar_plot(categories:list,input_df:pd.DataFrame,names:list,to_be_higlighted:str,lim:tuple,ax:None,legend_pos:tuple,ncols=1)->None:
     categories=[*categories, categories[0]] #to close the radar, duplicategoriese the first column
     n_points=len(categories)
     label_loc = np.linspace(start=0, stop=2 * np.pi, num=len(categories))#basically the angles for each label
@@ -26,10 +33,10 @@ def radar_plot(categories:list,input_df:pd.DataFrame,names:list,to_be_higlighted
     colors=['#00FFFF','#FF0000','#000080','#C0C0C0','#000000','#FF0000','#FFFF00','#FF00FF']
     for index,group in enumerate(groups.values()):
         if names[index]==to_be_higlighted:
-            ax.plot(label_loc,group,'o-',color='#008000',label=names[index],lw=3,markersize=1.5)
+            ax.plot(label_loc,group,'o-',color='#008000',label=names[index],lw=1,markersize=1.5)
             ax.fill(label_loc, group, color='#008000', alpha=0.1)#the selected is highlighted with green
         else:
-            ax.plot(label_loc,group,'o--',color=colors[index],label=names[index],lw=1.5,markersize=.75)
+            ax.plot(label_loc,group,'o--',color=colors[index],label=names[index],lw=.5,markersize=.75)
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
     ax.set_thetagrids(np.degrees(label_loc), categories)
@@ -37,32 +44,18 @@ def radar_plot(categories:list,input_df:pd.DataFrame,names:list,to_be_higlighted
         if 0 < angle < np.pi:
             label.set_fontsize(8)
             label.set_horizontalalignment('left')
-            label.set_y(.2)
-            label.set_x(.2)
         else:
             label.set_fontsize(8)
             label.set_horizontalalignment('right')
-            label.set_y(.2)
-            label.set_x(.2)
     ax.set_ylim(lim[0],lim[1])
     ax.tick_params(axis='y', labelsize=10)
     ax.grid(color='#AAAAAA')# Change the color of the circular gridlines.
     ax.spines['polar'].set_color('#eaeaea')# Change the color of the outermost gridline (the spine).
     #ax.set_facecolor('#FAFAFA')# Change the background color inside the circle itself.
-    ax.legend(loc='upper right', bbox_to_anchor=legend_pos,prop={'size': 8})
+    ax.legend(loc='upper right', bbox_to_anchor=legend_pos,prop={'size': 8},ncols=ncols,frameon=True)
     return ax
 
-
-fig=plt.figure()
-fig.set_figheight(8)
-fig.set_figwidth(6.7)
-ax1 = plt.subplot2grid(shape=(3, 3), loc=(0, 0), colspan=1)
-ax2 = plt.subplot2grid(shape=(3, 3), loc=(0, 1), colspan=1)
-ax3=plt.subplot2grid(shape=(3,3),loc=(1,0),colspan=1,polar=True)
-ax4=plt.subplot2grid(shape=(3,3),loc=(1,1),polar=True)
-ax5 = plt.subplot2grid(shape=(3, 3), loc=(2, 0), colspan=2)
-
-ax1.plot(feature_selection['best_auc'],label='Best AUROC\nwith std')
+ax1.plot(feature_selection['best_auc'],label='Best AUROC\nwith std',lw=1.5)
 ax1.fill_between(
     feature_selection['n_used']-1,
     (feature_selection['best_auc']-feature_selection['std']),(feature_selection['best_auc']+feature_selection['std']),facecolor='orange',alpha=.3
@@ -72,14 +65,14 @@ ax1.set_xlabel('Number of tested features',fontsize=8)
 ax1.set_title('A',fontsize=16,x=-.25,y=1.05)
 ax1.legend(fontsize=8)
 
-ax2.plot(feature_selection['n_used'],feature_selection['n_best'],label='Selected')
-ax2.plot(feature_selection['n_used'],feature_selection['n_used'],label='Tested')
+ax2.plot(feature_selection['n_used'],feature_selection['n_best'],label='Selected',lw=1.5)
+ax2.plot(feature_selection['n_used'],feature_selection['n_used'],label='Tested',lw=1.5)
 ax2.set(ylim=(0,64),xlim=(0,64),xticks=np.arange(start=1,stop=64,step=10),xticklabels=np.arange(start=1,stop=64,step=10),yticks=np.arange(start=1,stop=64,step=10),yticklabels=np.arange(start=1,stop=64,step=10))
 #ax2.set_xticklabels(fontsize=8)
 ax2.set_xlabel('Number of tested features',fontsize=8)
 ax2.set_ylabel('Number of selected features',fontsize=8)
 ax2.set_title('B',fontsize=16,x=-.25,y=1.05)
-ax2.legend(fontsize=8)
+ax2.legend(fontsize=8,loc='best')
 
 radar_plot(
     categories=selection.drop(columns=['model','polygon_area','test_Jaccard']).columns.str.replace('_',' ').str.replace('test ',''),
@@ -88,7 +81,8 @@ radar_plot(
     to_be_higlighted='XGB',
     lim=(.65,1),
     ax=ax3,
-    legend_pos=(.75, -.015)
+    legend_pos=(.75, -.01),
+    ncols=2
 )
 ax3.set_title('C',fontsize=16,x=-.25,y=1.05)
 
@@ -99,7 +93,7 @@ radar_plot(
     to_be_higlighted='Optim',
     lim=(.88,.98),
     ax=ax4,
-    legend_pos=(.75,-.15)
+    legend_pos=(.75,-.01)
 )
 ax4.set_title('D',fontsize=16,x=-.25,y=1.05)
 
@@ -115,12 +109,5 @@ cbar = ax5.collections[0].colorbar
 cbar.ax.tick_params(labelsize=8)
 ax5.set_title('E',fontsize=16,x=-.25,y=1.05)
 
-plt.subplots_adjust(left=0.1,
-                    bottom=0.1, 
-                    right=0.9, 
-                    top=0.9, 
-                    wspace=0.4, 
-                    hspace=0.4)
-
-
+plt.tight_layout()
 plt.savefig('../results/ml_plot.png',dpi=800,bbox_inches='tight')
