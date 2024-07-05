@@ -1,7 +1,6 @@
 import sqlite3
 import pandas as pd
 import streamlit as st
-st.set_page_config(page_title='Export',page_icon='../../data/figures/favicon.ico')
 
 st.html(
     '''
@@ -13,7 +12,7 @@ st.html(
     '''
 )
 #connect to DB and initialize cursor
-connection=sqlite3.connect('../data/MANUDB.db')
+connection=sqlite3.connect('../../data/MANUDB.db')
 cursor=connection.cursor()
 
 organism_names=(
