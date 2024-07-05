@@ -12,7 +12,7 @@ st.html(
     '''
 )
 #connect to DB and initialize cursor
-connection=sqlite3.connect('../../data/MANUDB.db')
+connection=sqlite3.connect('../data/MANUDB.db')
 cursor=connection.cursor()
 
 organism_names=(
