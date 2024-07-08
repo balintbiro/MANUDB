@@ -315,15 +315,7 @@ left_column, middle_column, right_column = st.columns(3)
 example=left_column.button('Example',on_click=populate_example)
 clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
-if predict!=None:
-	csv=convert_df(predict)
-	st.download_button(
-    		f"Download MANUDB_prediction.csv",
-    		csv,
-    		f"MANUDB_prediction.csv",
-    		"text/csv",
-    		key='download-prediction'
-    	)
+st.write(predict)
 #########################################################################
 st.divider()
 st.header(
