@@ -299,14 +299,8 @@ def predict():
         prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
         #st.dataframe(prediction)
         if predict!=None:
-			csv=convert_df(predict)
-			st.download_button(
-					f"Download MANUDB_prediction.csv",
-					csv,
-					f"MANUDB_prediction.csv",
-					"text/csv",
-					key='download-prediction'
-				)
+        	csv=convert_df(predict)
+        	st.download_button(f"Download MANUDB_prediction.csv",csv,f"MANUDB_prediction.csv","text/csv",key='download-prediction')
     else:
         st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
         return None
