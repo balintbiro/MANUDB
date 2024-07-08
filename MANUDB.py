@@ -315,7 +315,7 @@ example=left_column.button('Example',on_click=populate_example)
 clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
 if type(predict)==pd.DataFrame:
-	csv=convert_df(prediction)
+	csv=convert_df(predict)
     st.download_button(
         f"Download MANUDB_prediction.csv",
         csv,
