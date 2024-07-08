@@ -1,4 +1,4 @@
-import pickle
+import joblib
 import xgboost
 import numpy as np
 import pandas as pd
@@ -7,6 +7,6 @@ from itertools import product
 
 st.set_page_config(page_title='Predict')
 
-trained_clf=pickle.load(open('results/optimized_model.pkl','rb'))
+trained_clf=joblib.load(open('results/optimized_model.pkl','rb'))
 
 st.write(trained_clf.get_params())

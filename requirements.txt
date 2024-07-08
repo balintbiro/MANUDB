@@ -1,4 +1,4 @@
-pickle
+joblib
 xgboost
 numpy
 pandas
