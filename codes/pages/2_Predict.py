@@ -63,7 +63,7 @@ def predict():
         X=(df-np.mean(df))/np.std(df)
         prediction=pd.DataFrame()
         prediction['header']=headers
-        prediction['label']=trained_clf.predict(X)
+        prediction['label']=trained_clf.predict(X.values)
         prediction['prob-NUMT']=trained_clf.predict_proba(df[best_features])[:,1]
         prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
         #st.dataframe(prediction)
