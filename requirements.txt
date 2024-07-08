@@ -1,1 +1,6 @@
+pickle
 xgboost
+numpy
+pandas
+streamlit
+itertools
