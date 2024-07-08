@@ -60,7 +60,7 @@ def predict():
             kmer_counts.append(kmer_per_seq)
         df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
         df=df[best_features]
-        X=(X-np.mean(df))/np.std(df)
+        X=(df-np.mean(df))/np.std(df)
         prediction=pd.DataFrame()
         prediction['header']=headers
         prediction['label']=trained_clf.predict(X)
