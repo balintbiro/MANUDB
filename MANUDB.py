@@ -298,7 +298,15 @@ def predict():
         prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
         prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
         #st.dataframe(prediction)
-        return prediction
+        if predict!=None:
+			csv=convert_df(predict)
+			st.download_button(
+					f"Download MANUDB_prediction.csv",
+					csv,
+					f"MANUDB_prediction.csv",
+					"text/csv",
+					key='download-prediction'
+				)
     else:
         st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
         return None
@@ -315,7 +323,6 @@ left_column, middle_column, right_column = st.columns(3)
 example=left_column.button('Example',on_click=populate_example)
 clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
-st.write(predict)
 #########################################################################
 st.divider()
 st.header(
