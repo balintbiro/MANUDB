@@ -97,32 +97,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 #############################
-st.header(
-    '''
-    References
-    '''
-)
-st.markdown(
-    '''<div style="text-align: justify;">
-    [1] Lopez, J. V., Cevario, S., & O'Brien, S. J. (1996). Complete nucleotide sequences of the domestic cat (Felis catus)
-    mitochondrial genome and a transposed mtDNA tandem repeat (Numt) in the nuclear genome. Genomics, 33(2), 229-246.<br>
-    [2] Srinivasainagendra, V., Sandel, M. W., Singh, B., Sundaresan, A., Mooga, V. P., Bajpai, P., ... & Singh, K. K. (2017).
-    Migration of mitochondrial DNA in the nuclear genome of colorectal adenocarcinoma. Genome medicine, 9, 1-15.<br>
-    [3] Marshall, C., & Parson, W. (2021). Interpreting NUMTs in forensic genetics: Seeing the forest for the trees.
-    Forensic Science International: Genetics, 53, 102497.
-    [4] Hazkani-Covo, E., Zeller, R. M., & Martin, W. (2010). Molecular poltergeists: mitochondrial DNA copies (numts) in
-    sequenced nuclear genomes. PLoS genetics, 6(2), e1000834.<br>
-    [5] Nacer, D. F., & do Amaral, F. R. (2017). Striking pseudogenization in avian phylogenetics: Numts are large and
-    common in falcons. Molecular phylogenetics and evolution, 115, 1-6.<br>
-    [6] Hebert, P. D., Bock, D. G., & Prosser, S. W. (2023). Interrogating 1000 insect genomes for NUMTs: A risk
-    assessment for estimates of species richness. PLoS One, 18(6), e0286620.<br>
-    [7] Biró, B., Gál, Z., Brookman, M., & Hoffmann, O. I. (2022). Patterns of numtogenesis in sixteen different mice strains.
-    bioRxiv, 2022-08.<br>
-    [8] Biró, B., Gál, Z., Fekete, Z., Klecska, E., & Hoffmann, O. I. (2024). Mitochondrial genome plasticity of
-    mammalian species. BMC genomics, 25(1), 278.
-    </div>''',
-    unsafe_allow_html=True
-)
 
 with st.sidebar:
     st.markdown("[MANUDB](#manudb)")
@@ -258,7 +232,7 @@ if organism_name!=None:
             csv,
             f"{organism_name.lower().replace(' ','_')}_numts.csv",
             "text/csv",
-            key='download-csv'
+            key='download-DBpart'
         )
 #########################################################################
 st.divider()
@@ -332,7 +306,7 @@ def predict():
             csv,
             f"MANUDB_prediction.csv",
             "text/csv",
-            key='download-csv'
+            key='download-prediction'
         )
     else:
         st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
@@ -349,3 +323,32 @@ left_column, middle_column, right_column = st.columns(3)
 example=left_column.button('Example',on_click=populate_example)
 clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
+
+#########################################################################
+st.divider()
+st.header(
+    '''
+    References
+    '''
+)
+st.markdown(
+    '''<div style="text-align: justify;">
+    [1] Lopez, J. V., Cevario, S., & O'Brien, S. J. (1996). Complete nucleotide sequences of the domestic cat (Felis catus)
+    mitochondrial genome and a transposed mtDNA tandem repeat (Numt) in the nuclear genome. Genomics, 33(2), 229-246.<br>
+    [2] Srinivasainagendra, V., Sandel, M. W., Singh, B., Sundaresan, A., Mooga, V. P., Bajpai, P., ... & Singh, K. K. (2017).
+    Migration of mitochondrial DNA in the nuclear genome of colorectal adenocarcinoma. Genome medicine, 9, 1-15.<br>
+    [3] Marshall, C., & Parson, W. (2021). Interpreting NUMTs in forensic genetics: Seeing the forest for the trees.
+    Forensic Science International: Genetics, 53, 102497.
+    [4] Hazkani-Covo, E., Zeller, R. M., & Martin, W. (2010). Molecular poltergeists: mitochondrial DNA copies (numts) in
+    sequenced nuclear genomes. PLoS genetics, 6(2), e1000834.<br>
+    [5] Nacer, D. F., & do Amaral, F. R. (2017). Striking pseudogenization in avian phylogenetics: Numts are large and
+    common in falcons. Molecular phylogenetics and evolution, 115, 1-6.<br>
+    [6] Hebert, P. D., Bock, D. G., & Prosser, S. W. (2023). Interrogating 1000 insect genomes for NUMTs: A risk
+    assessment for estimates of species richness. PLoS One, 18(6), e0286620.<br>
+    [7] Biró, B., Gál, Z., Brookman, M., & Hoffmann, O. I. (2022). Patterns of numtogenesis in sixteen different mice strains.
+    bioRxiv, 2022-08.<br>
+    [8] Biró, B., Gál, Z., Fekete, Z., Klecska, E., & Hoffmann, O. I. (2024). Mitochondrial genome plasticity of
+    mammalian species. BMC genomics, 25(1), 278.
+    </div>''',
+    unsafe_allow_html=True
+)
