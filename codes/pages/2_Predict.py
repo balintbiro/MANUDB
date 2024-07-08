@@ -64,7 +64,7 @@ def predict():
         prediction=pd.DataFrame()
         prediction['header']=headers
         prediction['label']=trained_clf.predict(X.values)
-        prediction['prob-NUMT']=trained_clf.predict_proba(df[best_features])[:,1]
+        prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
         prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
         #st.dataframe(prediction)
         csv = convert_df(prediction)
