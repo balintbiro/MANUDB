@@ -132,7 +132,7 @@ st.divider()
 st.header("Export")
 st.markdown(
     '''<div style="text-align: justify;">
-    This subpage makes it possible to export the selection of NUMTs based on 
+    This functionality makes it possible to export the selection of NUMTs based on 
     the selected organism name. 
     Just click on the dropdown above and check the available options. 
     Right now MANUDB supports <a href="https://en.wikipedia.org/wiki/Comma-separated_values">
@@ -261,12 +261,89 @@ if organism_name!=None:
 #########################################################################
 st.divider()
 st.header("Predict")
-st.write("Lorem Ipsum"*100)
-X=pd.DataFrame(np.random.randint(0,100,size=(100,4)),columns=list('ABCD'))
-y=np.random.choice([0,1],100)
+trained_clf=pickle.load(open('optimized_model.pkl','rb'))
+best_features=pd.read_csv('best_features.csv',index_col=0)['0'].tolist()
 
-clf=xgboost.XGBClassifier()
-clf.fit(X,y)
 
-st.write(xgboost.__version__)
-st.write(sys.version)
+k=3
+bases=list('ACGT')
+kmers=[''.join(p) for p in product(bases, repeat=k)]
+
+
+st.html(
+    '''
+    <style>
+    hr {
+        border-color: green;
+    }
+    </style>
+    '''
+)
+
+
+if 'text_area_content' not in st.session_state:
+    st.session_state.text_area_content=''
+
+
+examples='''>Example_Sequence.1\nAATGCTATTAGGGTCTGAGAGACTCTGCGAGTATAGCGGTTAGCGGCTATAGCGATCGATCAGCTACGATCTACGACTATCCA\n>Example_Sequence.2\nATGGTTTTTTTTGGGGTTACGTACGTNNNNNATATCGCGGCTACGGCTCGATCGGTTGCTACG'''
+
+
+def populate_example():
+    st.session_state.text_area_content=examples
+
+
+def clear():
+    st.session_state.text_area_content=''
+
+
+def convert_df(df):
+    return df.to_csv(index=False).encode('utf-8')
+
+
+def predict():
+    if st.session_state.text_area_content!='':
+        items=st.session_state.text_area_content.split('\n')
+        headers,sequences=[],[]
+        items=pd.Series(items)
+        headers=items[items.str.startswith('>')].str[1:]
+        sequences=items[~items.str.startswith('>')].str.upper()
+        kmer_counts=[]
+        for sequence in sequences:
+            kmer_per_seq=[]
+            for kmer in kmers:
+                kmer_per_seq.append(sequence.count(kmer))
+            kmer_counts.append(kmer_per_seq)
+        df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
+        df=df[best_features]
+        X=(df-np.mean(df))/np.std(df)
+        prediction=pd.DataFrame()
+        prediction['header']=headers
+        prediction['label']=trained_clf.predict(X.values)
+        prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
+        prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
+        #st.dataframe(prediction)
+        csv = convert_df(prediction)
+
+
+        st.download_button(
+            f"Download MANUDB_prediction.csv",
+            csv,
+            f"MANUDB_prediction.csv",
+            "text/csv",
+            key='download-csv'
+        )
+    else:
+        st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
+
+
+text_area=st.text_area(
+    label='Please paste your sequence(s) here',
+    height=150,
+    value=st.session_state.text_area_content,
+    key='text_area'
+)
+st.session_state.text_area_content=text_area
+left_column, middle_column, right_column = st.columns(3)
+example=left_column.button('Example',on_click=populate_example)
+clear=middle_column.button('Clear',on_click=clear)
+predict=right_column.button('Predict',on_click=predict)
