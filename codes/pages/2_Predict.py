@@ -7,16 +7,9 @@ from itertools import product
 from ast import literal_eval
 
 
-best_features=pd.read_csv('results/best_features.csv',index_col=0)['0'].tolist()
-best_params=literal_eval(
-    pd.read_csv('results/param_search_result.csv',index_col=0)
-    .sort_values(by='polygon_area',ascending=False)
-    .iloc[0]['params']
-)
-features=pd.read_csv('data/NUMT_features.csv')
-features=features[best_features+['label']]
-X,y=features.drop(columns=['label']),features['label'].replace(['random','numt'],[0,1]).values
+X=pd.DataFrame(np.random.randint(0,100,size=(100,4)),columns=list('ABCD'))
+y=np.random.choice([0,1],100)
 
-
-clf=xgboost.XGBClassifier(**best_params)
-optimized_model=clf.fit(X,y)
+clf=xgboost.XGBClassifier()
+clf.fit(X,y)
+clf.get_params()
