@@ -5,4 +5,8 @@ import pandas as pd
 import streamlit as st
 from itertools import product
 
-st.write('Working')
+st.set_page_config(page_title='Predict')
+
+trained_clf=pickle.load(open('results/optimized_model.pkl','rb'))
+
+st.write(trained_clf.get_params())
