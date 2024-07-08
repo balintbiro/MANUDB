@@ -317,12 +317,12 @@ predict=right_column.button('Predict',on_click=predict)
 if type(predict)==pd.DataFrame:
 	csv=convert_df(predict)
     st.download_button(
-        f"Download MANUDB_prediction.csv",
-        csv,
-        f"MANUDB_prediction.csv",
-        "text/csv",
-        key='download-prediction'
-    )
+    		f"Download MANUDB_prediction.csv",
+	        csv,
+	        f"MANUDB_prediction.csv",
+	        "text/csv",
+	        key='download-prediction'
+    	)
 #########################################################################
 st.divider()
 st.header(
