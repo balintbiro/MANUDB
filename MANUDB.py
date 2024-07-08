@@ -301,6 +301,7 @@ def predict():
         return prediction
     else:
         st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
+        return None
 
 
 text_area=st.text_area(
@@ -314,7 +315,7 @@ left_column, middle_column, right_column = st.columns(3)
 example=left_column.button('Example',on_click=populate_example)
 clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
-if type(predict)==pd.DataFrame:
+if predict!=None:
 	csv=convert_df(predict)
 	st.download_button(
     		f"Download MANUDB_prediction.csv",
