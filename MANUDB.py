@@ -297,10 +297,8 @@ def predict():
         prediction['label']=trained_clf.predict(X.values)
         prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
         prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
-        #st.dataframe(prediction)
-        if prediction!=None:
-        	csv=convert_df(prediction)
-        	st.download_button(f"Download MANUDB_prediction.csv",csv,f"MANUDB_prediction.csv","text/csv",key='download-prediction')
+        st.dataframe(prediction)
+        
     else:
         st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
         return None
