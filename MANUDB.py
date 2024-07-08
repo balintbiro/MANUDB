@@ -129,7 +129,7 @@ with st.sidebar:
 
 #########################################################################
 st.divider()
-st.header(''Export'')
+st.header("Export")
 st.markdown(
     '''<div style="text-align: justify;">
     This subpage makes it possible to export the selection of NUMTs based on 
