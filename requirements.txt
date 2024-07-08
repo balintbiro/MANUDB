@@ -3,4 +3,3 @@ xgboost
 numpy
 pandas
 streamlit
-itertools
