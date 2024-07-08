@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from itertools import product
+from ast import literal_eval
 
 
 best_features=pd.read_csv('results/best_features.csv',index_col=0)['0'].tolist()
