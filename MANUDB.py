@@ -129,18 +129,21 @@ with st.sidebar:
 
 #########################################################################
 st.divider()
-st.header("Export")
-st.write("Lorem Ipsum"*100)
-
-st.html(
-    '''
-    <style>
-    hr {
-        border-color: green;
-    }
-    </style>
-    '''
+st.header(''Export'')
+st.markdown(
+    '''<div style="text-align: justify;">
+    This subpage makes it possible to export the selection of NUMTs based on 
+    the selected organism name. 
+    Just click on the dropdown above and check the available options. 
+    Right now MANUDB supports <a href="https://en.wikipedia.org/wiki/Comma-separated_values">
+    .csv format</a> exports. During the export one can download 14 features 
+    (e value, genomic identifier, genomic start position, mitochondrial start position, genomic length,
+    mitochondrial length, genomic strand, mitochondrial strand, genomic size, genomic sequence, 
+    mitochondrial sequence, genus name, family name and order name).
+    </div>''',
+    unsafe_allow_html=True
 )
+
 #connect to DB and initialize cursor
 connection=sqlite3.connect('MANUDB.db')
 cursor=connection.cursor()
@@ -240,8 +243,8 @@ if organism_name!=None:
     }
 
     query=st.selectbox(
-        label='Please select an option',
-        placeholder='Please select an option',
+        label='Please select table(s)',
+        placeholder='Please select table(s)',
         index=None,
         options=['Statistic','Location','Sequence','Taxonomy','All']
     )
@@ -255,26 +258,6 @@ if organism_name!=None:
             "text/csv",
             key='download-csv'
         )
-
-st.header(
-    '''
-    Export option
-    '''
-)
-st.markdown(
-    '''<div style="text-align: justify;">
-    This subpage makes it possible to export the selection of NUMTs based on 
-    the selected organism name. 
-    Just click on the dropdown above and check the available options. 
-    Right now MANUDB supports <a href="https://en.wikipedia.org/wiki/Comma-separated_values">
-    .csv format</a> exports. During the export one can download 14 features 
-    (e value, genomic identifier, genomic start position, mitochondrial start position, genomic length,
-    mitochondrial length, genomic strand, mitochondrial strand, genomic size, genomic sequence, 
-    mitochondrial sequence, genus name, family name and order name).
-    </div>''',
-    unsafe_allow_html=True
-)
-
 #########################################################################
 st.divider()
 st.header("Predict")
