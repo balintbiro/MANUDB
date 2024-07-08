@@ -6,15 +6,7 @@ import os
 st.write(os.getwd())
 st.write(os.listdir('../data/'))
 
-'''st.html(
-    '''
-    <style>
-    hr {
-        border-color: green;
-    }
-    </style>
-    '''
-)
+'''
 #connect to DB and initialize cursor
 connection=sqlite3.connect('../../data/MANUDB.db')
 cursor=connection.cursor()
