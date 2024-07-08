@@ -1,6 +1,7 @@
 import streamlit as st
 
 import sys
+import joblib
 import sqlite3
 import xgboost
 import numpy as np
@@ -261,7 +262,7 @@ if organism_name!=None:
 #########################################################################
 st.divider()
 st.header("Predict")
-trained_clf=pickle.load(open('optimized_model.pkl','rb'))
+trained_clf=joblib.load('optimized_model.pkl')
 best_features=pd.read_csv('best_features.csv',index_col=0)['0'].tolist()
 
 
