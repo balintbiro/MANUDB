@@ -1,8 +1,8 @@
 import pickle
+import numpy as np
 import pandas as pd
 import streamlit as st
 from itertools import product
-from sklearn.preprocessing import StandardScaler
 st.set_page_config(page_title='Predict')
 
 
@@ -59,8 +59,8 @@ def predict():
                 kmer_per_seq.append(sequence.count(kmer))
             kmer_counts.append(kmer_per_seq)
         df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
-        scaler=StandardScaler()
-        X=scaler.fit_transform(df[best_features])
+        df=df[best_features]
+        X=(X-np.mean(df))/np.std(df)
         prediction=pd.DataFrame()
         prediction['header']=headers
         prediction['label']=trained_clf.predict(X)
