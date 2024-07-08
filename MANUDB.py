@@ -1,6 +1,7 @@
 import streamlit as st
 
 import sys
+import sqlite3
 import xgboost
 import numpy as np
 import pandas as pd
@@ -16,9 +17,6 @@ with st.sidebar:
 #########################################################################
 st.header("Export")
 st.write("Lorem Ipsum"*100)
-import sqlite3
-import pandas as pd
-import streamlit as st
 
 st.html(
     '''
