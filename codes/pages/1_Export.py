@@ -2,7 +2,11 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 
-st.html(
+import os
+st.write(os.getwd())
+st.write(os.listdir('../data/'))
+
+'''st.html(
     '''
     <style>
     hr {
@@ -145,4 +149,4 @@ st.markdown(
     mitochondrial sequence, genus name, family name and order name).
     </div>''',
     unsafe_allow_html=True
-)
+)'''
