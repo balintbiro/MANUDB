@@ -6,6 +6,7 @@ import sqlite3
 import xgboost
 import numpy as np
 import pandas as pd
+from itertools import product
 
 st.set_page_config(page_title='MANUDB',initial_sidebar_state='expanded')
 
