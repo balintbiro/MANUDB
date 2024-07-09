@@ -334,9 +334,9 @@ predict=right_column.button('Predict',on_click=predict)
 if 'prediction' in st.session_state:
 	csv = convert_df(st.session_state['prediction'])
 	st.download_button(
-        f"Download MANUD_prediction.csv",
+        label="Download MANUD_prediction.csv",
         csv,
-        f"Download MANUD_prediction.csv",
+        filename="MANUD_prediction.csv",
         "text/csv",
         key='download-DBpart'
     )
