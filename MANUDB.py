@@ -341,6 +341,7 @@ if 'prediction' in st.session_state:
         "text/csv",
         key='download-DBpart'
     )
+    del st.session_state['prediction']
 #########################################################################
 st.divider()
 st.header(
