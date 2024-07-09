@@ -239,12 +239,13 @@ st.divider()
 st.header("Predict")
 st.markdown(
     '''<div style="text-align: justify;">
-    With this subpage one can predict whether a particular sequence is a NUMT or is not a NUMT.
+    With this functionality one can predict whether a particular sequence is a NUMT or is not a NUMT.
     To use this functionality just simply paste your <a href="https://en.wikipedia.org/wiki/FASTA_format">
     .FASTA format</a> sequence(s) here. If you click on the 'Example' button above it will paste two 
     correctly formatted sequences into the text area. Then you can use the 'Predict' button to 
     calculate the probability that these two sequences are actual NUMTs. The output of this functionality 
-    is downloadable in a .csv file which contains the FASTA headers and the corresponding predicted 
+    is downloadable in a <a href="https://en.wikipedia.org/wiki/Comma-separated_values">
+    .csv format</a> file which contains the FASTA headers and the corresponding predicted 
     probabilities.<br> 
     Please bear in mind that MANUDB prediction functionality is designed for mammalian sequences. 
     And so if you run prediction on non-mammalian sequences the results will be unreliable.
