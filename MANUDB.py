@@ -337,8 +337,8 @@ if 'prediction' in st.session_state:
         label="Download MANUD_prediction.csv",
         filename="MANUD_prediction.csv",
         key='download-DBpart',
-        csv,
-        "text/csv"
+        data=csv,
+        mime="text/csv"
     )
 #########################################################################
 st.divider()
