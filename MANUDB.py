@@ -335,10 +335,10 @@ if 'prediction' in st.session_state:
 	csv = convert_df(st.session_state['prediction'])
 	st.download_button(
         label="Download MANUD_prediction.csv",
-        csv,
         filename="MANUD_prediction.csv",
-        "text/csv",
-        key='download-DBpart'
+        key='download-DBpart',
+        csv,
+        "text/csv"
     )
 #########################################################################
 st.divider()
