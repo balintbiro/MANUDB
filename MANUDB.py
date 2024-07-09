@@ -332,7 +332,7 @@ example=left_column.button('Example',on_click=populate_example)
 clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
 if 'prediction' in st.session_state:
-	csv = convert_df(queries[query])
+	csv = convert_df(st.session_state['prediction'])
 	st.download_button(
         f"Download MANUD_prediction.csv",
         csv,
