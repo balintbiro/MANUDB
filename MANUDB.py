@@ -55,7 +55,7 @@ st.markdown(
 )
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
-    Current status and functionalities
+    <br>Current status and functionalities
     </div>''',
     unsafe_allow_html=True
 )
@@ -72,7 +72,7 @@ st.markdown(
 )
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
-    Contact and bug report
+    <br>Contact and bug report
     </div>''',
     unsafe_allow_html=True
 )
@@ -89,7 +89,7 @@ st.markdown(
 )
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
-    Upon usage please cite
+    <br>Upon usage please cite
     </div>''',
     unsafe_allow_html=True
 )
