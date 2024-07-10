@@ -23,7 +23,7 @@ st.html(
 )
 
 #general information about the site
-st.header("MANUDB")
+st.header("MANUDB - the MAmmalian NUclear mitochondrial sequences DataBase")
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
     What is MANUDB?
