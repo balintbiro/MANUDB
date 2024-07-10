@@ -27,7 +27,8 @@ st.header("MANUDB")
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
     What is MANUDB?
-    </div>'''
+    </div>''',
+    unsafe_allow_html=True
 )
 st.markdown(
     '''<div style="text-align: justify;">
@@ -55,7 +56,8 @@ st.markdown(
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
     Current status and functionalities
-    </div>'''
+    </div>''',
+    unsafe_allow_html=True
 )
 st.markdown(
     '''<div style="text-align: justify;">
@@ -71,7 +73,8 @@ st.markdown(
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
     Contact and bug report
-    </div>'''
+    </div>''',
+    unsafe_allow_html=True
 )
 st.markdown(
     '''<div style="text-align: justify;">
@@ -87,7 +90,8 @@ st.markdown(
 st.markdown(
     '''<div style="text-align: left; font-weight: 900;">
     Upon usage please cite
-    </div>'''
+    </div>''',
+    unsafe_allow_html=True
 )
 st.markdown(
     '''<div style="text-align: justify;">
