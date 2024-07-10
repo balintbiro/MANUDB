@@ -34,7 +34,7 @@ st.markdown(
     '''<div style="text-align: justify;">
     There is an ongoing process in which mitochondrial sequences are
     being integrated into the nuclear genome. These sequences are called NUclear MiTochondrial sequences (NUMTs)
-    <a href="https://www.sciencedirect.com/science/article/pii/S0888754396901883?via%3Dihub">(Lopez et al., 1996)</a>.<br>
+    (<a href="https://www.sciencedirect.com/science/article/pii/S0888754396901883?via%3Dihub">Lopez et al., 1996</a>).<br>
     The importance of NUMTs has already been revealed in cancer biology
     <a href="https://link.springer.com/article/10.1186/s13073-017-0420-6">(Srinivasainagendra et al., 2017)</a>,
     forensic <a href="https://www.sciencedirect.com/science/article/pii/S1872497321000363">(Marshall & Parson, 2021)</a>,
