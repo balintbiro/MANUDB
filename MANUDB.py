@@ -339,5 +339,5 @@ clear=middle_column.button('Clear',on_click=clear)
 predict=right_column.button('Predict',on_click=predict)
 if 'prediction' in st.session_state:
 	csv = convert_df(st.session_state['prediction'])
-	st.download_button(f"Download MANUD_prediction.csv",csv,f"MANUD_prediction.csv","text/csv",key='download-DBpart')
+	st.download_button(f"Download MANUD_prediction.csv",csv,f"MANUD_prediction.csv","text/csv",key='download-prediction')
 	del st.session_state['prediction']
