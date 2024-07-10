@@ -36,19 +36,19 @@ st.markdown(
     being integrated into the nuclear genome. These sequences are called NUclear MiTochondrial sequences (NUMTs)
     (<a href="https://www.sciencedirect.com/science/article/pii/S0888754396901883?via%3Dihub">Lopez et al., 1996</a>).<br>
     The importance of NUMTs has already been revealed in cancer biology
-    <a href="https://link.springer.com/article/10.1186/s13073-017-0420-6">(Srinivasainagendra et al., 2017)</a>,
-    forensic <a href="https://www.sciencedirect.com/science/article/pii/S1872497321000363">(Marshall & Parson, 2021)</a>,
-    phylogenetic studies <a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1000834">(Hazkani-Covo et al., 2010)</a>
+    (<a href="https://link.springer.com/article/10.1186/s13073-017-0420-6">Srinivasainagendra et al., 2017</a>),
+    forensic (<a href="https://www.sciencedirect.com/science/article/pii/S1872497321000363">Marshall & Parson, 2021</a>),
+    phylogenetic studies (<a href="https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1000834">Hazkani-Covo et al., 2010</a>)
     and in the evolution of the eukaryotic genetic information
-    <a href="https://www.sciencedirect.com/science/article/pii/S1055790317302609?via%3Dihub">(Nacer & Raposo do Amaral, 2017)</a>.<br> 
+    (<a href="https://www.sciencedirect.com/science/article/pii/S1055790317302609?via%3Dihub">Nacer & Raposo do Amaral, 2017</a>).<br> 
     Human and numerous model organisms’ genomes were described from the NUMTs point of view.
     Furthermore, recent studies were published on the patterns of these nuclear localised mitochondrial sequences
-    in different taxa <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0286620">(Hebert et al., 2023; 
-    <a href="https://www.biorxiv.org/content/10.1101/2022.08.05.502930v2.full.pdf">,Biró et al., 2022).</a> <br>
+    in different taxa (<a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0286620">Hebert et al., 2023; 
+    <a href="https://www.biorxiv.org/content/10.1101/2022.08.05.502930v2.full.pdf"> Biró et al., 2022</a>). <br>
     However, the results of the previously released studies are difficult to compare 
     due to the lack of standardised methods and/or using few numbers of genomes. To overcome this limitations,
     our group has already published a computational pipeline to mine NUMTs
-    <a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-024-10201-9">(Biró et al., 2024)</a>. Therefore, our goal with MANUDB is to
+    (<a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-024-10201-9">Biró et al., 2024</a>). Therefore, our goal with MANUDB is to
     store, visualize, predict and make NUMTs accessible that were mined with our workflow.
     </div>''',
     unsafe_allow_html=True
