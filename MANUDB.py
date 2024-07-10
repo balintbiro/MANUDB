@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 from itertools import product
 
-st.set_page_config(page_title='MANUDB',initial_sidebar_state='expanded')
+#set page configuration
+st.set_page_config(page_title='MANUDB',initial_sidebar_state='expanded',page_icon=':cyclone:')
 
 st.html(
     '''
@@ -21,6 +22,7 @@ st.html(
     '''
 )
 
+#general information about the site
 st.header("MANUDB")
 st.header(
     '''
@@ -28,7 +30,7 @@ st.header(
     '''
 )
 st.markdown(
-    '''<div style="text-align: justify;">
+    '''<div style="text-align: justify; font-weight: 900;">
     There is an ongoing process in which mitochondrial sequences are
     being integrated into the nuclear genome. These sequences are called NUclear MiTochondrial sequences (NUMTs)
     <a href="https://www.sciencedirect.com/science/article/pii/S0888754396901883?via%3Dihub">[1]</a>.<br>
