@@ -291,7 +291,7 @@ def populate_example():
 def clear():
     st.session_state.text_area_content=''
     if 'prediction' in st.session_state:
-	del st.session_state['prediction']
+    	del st.session_state['prediction']
 
 
 def convert_df(df):
