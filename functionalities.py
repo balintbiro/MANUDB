@@ -1,7 +1,10 @@
 import json
 import sqlite3
+import numpy as np
 import pandas as pd
 import streamlit as st
+from pycirclize import Circos
+import matplotlib.pyplot as plt
 
 class MANUDB:
     def __init__(self):
@@ -148,8 +151,69 @@ class Visualize:
         assembly=pd.DataFrame([
             assembly['assigned_molecule'],
             assembly['length'],
-            assembly['sequence_role']
+            assembly['sequence_role'],
+            assembly['refseq_accn']
         ]).T
-        assembly.columns=['molecule','length','role']
+        assembly.columns=['molecule','length','role','refseq']
         assembly.loc[assembly['role'].str.contains('unlocal|scaffold'),'molecule']='scaffold'
+        assembly['molecule']=assembly['molecule'].apply(lambda name: int(name) if name.isnumeric() else name)
+        mapper=pd.Series(data=assembly['molecule'].values,index=assembly['refseq'].values)
+        numts['molecule']=mapper[numts['genomic_id'].values].values
         return (numts,assembly)
+    
+    def get_sectors(self,assembly:pd.DataFrame,scaler=1)->dict:
+        assembly['length']=assembly['length'].astype(int)
+        sectors=assembly.groupby(by='molecule')['length'].sum().reset_index().apply(
+            lambda row: int(int(row['length'])/scaler) if row['molecule']!='MT' else int(row['length']),
+            axis=1
+        )
+        sectors.index=assembly.groupby(by='molecule')['length'].sum().index
+        sectors=sectors[sectors>0]
+        return sectors.to_dict()
+    
+    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame,scaler=1)->list:
+        mt_size=assembly[assembly['molecule']=='MT']['length'].values[0]
+        fil=(numts['mitochondrial_start']+numts['mitochondrial_length'])<mt_size
+        numts=numts[fil]
+        links=numts[['molecule','genomic_start','mitochondrial_start','genomic_length','mitochondrial_length']].apply(
+            lambda row: (
+                ('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
+                (row['molecule'],int(row['genomic_start']/scaler),int((row['genomic_start']+row['genomic_length'])/scaler))
+            ),axis=1
+        ).tolist()
+        return links
+    
+    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,proportional_coloring=False)->None:
+        fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
+        circos=Circos(sectors,space=5)
+        for sector in circos.sectors:
+            fontsize=12
+            track=sector.add_track((95,100))
+            if proportional_coloring==True:
+                track.axis(fc='grey')
+                norm=Normalize(vmin=min(numts['mitochondrial_length']),vmax=max(numts['mitochondrial_length']))
+                cmap=plt.get_cmap('Reds')
+                colors=[cmap(norm(value)) for value in numts['mitochondrial_length'].tolist()]
+                name2color=dict(zip(sectors.keys(), colors))
+                sm=ScalarMappable(cmap=cmap,norm=norm)
+                sm.set_array([])
+            else:
+                np.random.seed(0)
+                colors=[
+                    '#'+''.join(list(np.random.choice(a=list('123456789ABCDEF'), size=6))) for i in range(len(sectors.keys()))
+                ]
+                name2color=dict(zip(sectors.keys(), colors))
+                if sector.name=='MT':
+                    track.axis(fc='grey')
+                else:
+                    track.axis(fc=name2color[sector.name])
+            if sector.name=='scaffold':
+                track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
+            elif len(str(sector.name))==2:
+                track.text(sector.name,color='black',size=fontsize,r=110,orientation='vertical')
+            else:
+                track.text(sector.name,color='black',size=fontsize,r=110)
+        for link in links:
+            circos.link(link[0],link[1],color=name2color[link[1][0]])
+        circos.plotfig(ax=ax)
+        return fig
