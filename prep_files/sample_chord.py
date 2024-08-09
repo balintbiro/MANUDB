@@ -1,127 +1,104 @@
 import numpy as np
 import pandas as pd
-import seaborn as sns
+from pycirclize import Circos
 import matplotlib.pyplot as plt
 
-optimized=pd.read_csv('../results/param_search_result.csv',index_col=0)
-selection=pd.read_csv('../../../results/model_selection_results.csv')
-selection.columns=['model','AUROC','test_F1','test_Accuracy','test_Precision','test_Recall','test_Jaccard','polygon_area']
-feature_selection=pd.read_csv('../../../results/feature_selection_results.csv',index_col=0)
+numts=pd.read_csv('../data/ncbi_numts.csv')
+numts.rename(columns={'order':'taxonomy_order'},inplace=True)
 
-optimization=pd.DataFrame([
-    optimized.sort_values(by='polygon_area',ascending=False).reset_index(drop=True).iloc[0][optimized.columns.str.contains('mean_test')].values,
-    selection[selection['model']=='XGB'].drop(columns=['model','polygon_area']).values[0]
-],columns=['AUROC','F1','Accuracy','Precision','Recall','Jaccard'])
-optimization['model']=['Optim','Def']
+rn_numts=numts[numts['organism_name']=='rattus_norvegicus']
 
-def radar_plot(categories:list,input_df:pd.DataFrame,names:list,to_be_higlighted:str,lim:tuple,ax:None,legend_pos:tuple,ncols=1)->None:
-    categories=[*categories, categories[0]] #to close the radar, duplicategoriese the first column
-    n_points=len(categories)
-    label_loc = np.linspace(start=0, stop=2 * np.pi, num=len(categories))#basically the angles for each label
-    groups={}
-    for index,category in enumerate(input_df.index):
-        group=np.array(input_df)[index]
-        group=[*group,group[0]]#duplicate the first value to close the radar
-        groups[f'group_{index+1}']=group
-    colors=['#00FFFF','#FF0000','#000080','#C0C0C0','#000000','#FF0000','#FFFF00','#FF00FF']
-    for index,group in enumerate(groups.values()):
-        if names[index]==to_be_higlighted:
-            ax.plot(label_loc,group,'o-',color='#008000',label=names[index],lw=3,markersize=1.5)
-            ax.fill(label_loc, group, color='#008000', alpha=0.1)#the selected is highlighted with green
+report=pd.read_csv('../results/rat_report.txt',sep='\t',comment='#',header=None)
+report.columns=['Sequence-Name','Sequence-Role','Assigned-Molecule','Assigned-Molecule-Location/Type','GenBank-Accn','Relationship','RefSeq-Accn','Assembly-Unit','Sequence-Length','UCSC-style-name']
+
+report['Sequence-Name']=report['Sequence-Name'].apply(
+    lambda name:
+    'scaffold' if 'scaffold' in name
+    else (
+        name.split('_')[0] if 'unloc' in name
+        else name
+    )
+)
+report['Sequence-Name']=report['Sequence-Name'].apply(lambda name: int(name) if name.isnumeric() else name)
+
+mt_size=report[report['Sequence-Name']=='MT']['Sequence-Length'].values[0]+1
+
+rn_numts=rn_numts[(rn_numts['mitochondrial_start']+rn_numts['mitochondrial_length'])<mt_size]
+
+id_dict=pd.Series(index=report['RefSeq-Accn'].values,data=report['Sequence-Name'].values)
+rn_numts['sequence_name']=id_dict[rn_numts['genomic_id'].values].values
+
+def chord_plotter(report:pd.DataFrame, numts:pd.DataFrame, cmap:bool, colors:list, ax:None, raw=True)->tuple:#sls stands for scale links and sectors
+    numt_sub=numts.copy()
+    scaler=1
+    if raw==False:
+        scaler=1_000_000
+    sectors=report.groupby(by='Sequence-Name')['Sequence-Length'].sum().reset_index().apply(
+        lambda row: int(row['Sequence-Length']/scaler) if row['Sequence-Name']!='MT' else row['Sequence-Length'],
+        axis=1
+    )
+    sectors.index=report.groupby(by='Sequence-Name')['Sequence-Length'].sum().index
+    numt_sub['genomic_start']=numt_sub['genomic_start']/scaler
+    numt_sub['genomic_length']=numt_sub['genomic_length']/scaler
+    links=numt_sub[['sequence_name','genomic_start','mitochondrial_start','genomic_length','mitochondrial_length']].apply(
+        lambda row: (
+            ('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
+            (row['sequence_name'],int(row['genomic_start']),int(row['genomic_start']+row['genomic_length']))
+        ),axis=1
+    ).tolist()
+    sectors=sectors.to_dict()
+    name2color=dict(zip(sectors.keys(), colors))
+    circos=Circos(sectors,space=5)
+    for sector in circos.sectors:
+        fontsize=6
+        track=sector.add_track((95,100))
+        if cmap==False:
+            track.axis(fc=name2color[sector.name])
         else:
-            ax.plot(label_loc,group,'o--',color=colors[index],label=names[index],lw=1.5,markersize=.75)
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-    ax.set_thetagrids(np.degrees(label_loc), categories)
-    for label, angle in zip(ax.get_xticklabels(), label_loc):
-        if 0 < angle < np.pi:
-            label.set_fontsize(8)
-            label.set_horizontalalignment('left')
-            label.set_y(.2)
-            label.set_x(.2)
+            track.axis(fc='grey')
+        if sector.name=='scaffold':
+            track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
+        elif len(str(sector.name))==2:
+            track.text(sector.name,color='black',size=fontsize,r=110,orientation='vertical')
         else:
-            label.set_fontsize(8)
-            label.set_horizontalalignment('right')
-            label.set_y(.2)
-            label.set_x(.2)
-    ax.set_ylim(lim[0],lim[1])
-    ax.tick_params(axis='y', labelsize=10)
-    ax.grid(color='#AAAAAA')# Change the color of the circular gridlines.
-    ax.spines['polar'].set_color('#eaeaea')# Change the color of the outermost gridline (the spine).
-    #ax.set_facecolor('#FAFAFA')# Change the background color inside the circle itself.
-    ax.legend(loc='upper right', bbox_to_anchor=legend_pos,prop={'size': 8},ncols=ncols)
-    return ax
+            track.text(sector.name,color='black',size=fontsize,r=110)
 
+    for link in links:
+        circos.link(link[0],link[1],color=name2color[link[1][0]])
 
-fig=plt.figure(figsize=(8,6.7))
-'''fig.set_figheight(8)
-fig.set_figwidth(6.7)'''
-ax1 = plt.subplot2grid(shape=(3, 3), loc=(0, 0), colspan=1)
-ax2 = plt.subplot2grid(shape=(3, 3), loc=(0, 1), colspan=1)
-ax3=plt.subplot2grid(shape=(3,3),loc=(1,0),colspan=1,polar=True)
-ax4=plt.subplot2grid(shape=(3,3),loc=(1,1),polar=True)
-ax5 = plt.subplot2grid(shape=(3, 3), loc=(2, 0), colspan=2)
+    circos.plotfig(ax=ax)
 
-ax1.plot(feature_selection['best_auc'],label='Best AUROC\nwith std')
-ax1.fill_between(
-    feature_selection['n_used']-1,
-    (feature_selection['best_auc']-feature_selection['std']),(feature_selection['best_auc']+feature_selection['std']),facecolor='orange',alpha=.3
-)
-ax1.set_ylabel('AUROC',fontsize=8)
-ax1.set_xlabel('Number of tested features',fontsize=8)
-ax1.set_title('A',fontsize=16,x=-.25,y=1.05)
-ax1.legend(fontsize=8)
+plt.figure(figsize=(6.7, 6.7))
+ax1 = plt.subplot(2,2,1,polar=True)
+ax2 = plt.subplot(2,2,2,polar=True)
+ax3 = plt.subplot(2,2,3,polar=True)
+ax4 = plt.subplot(2,2,4,polar=True)
 
-ax2.plot(feature_selection['n_used'],feature_selection['n_best'],label='Selected')
-ax2.plot(feature_selection['n_used'],feature_selection['n_used'],label='Tested')
-ax2.set(ylim=(0,64),xlim=(0,64),xticks=np.arange(start=1,stop=64,step=10),xticklabels=np.arange(start=1,stop=64,step=10),yticks=np.arange(start=1,stop=64,step=10),yticklabels=np.arange(start=1,stop=64,step=10))
-#ax2.set_xticklabels(fontsize=8)
-ax2.set_xlabel('Number of tested features',fontsize=8)
-ax2.set_ylabel('Number of selected features',fontsize=8)
-ax2.set_title('B',fontsize=16,x=-.25,y=1.05)
-ax2.legend(fontsize=8,loc='best')
+np.random.seed(0)
+colors=['#'+''.join(list(np.random.choice(a=list('123456789ABCDEF'), size=6))) for i in range(len(sectors.keys()))]
 
-radar_plot(
-    categories=selection.drop(columns=['model','polygon_area','test_Jaccard']).columns.str.replace('_',' ').str.replace('test ',''),
-    input_df=selection.drop(columns=['model','polygon_area','test_Jaccard']),
-    names=selection['model'].values,
-    to_be_higlighted='XGB',
-    lim=(.65,1),
-    ax=ax3,
-    legend_pos=(.75, -.01),
-    ncols=2
-)
-ax3.set_title('C',fontsize=16,x=-.25,y=1.05)
+chord_plotter(report=report,numts=rn_numts,ax=ax1,colors=colors,cmap=False)
+chord_plotter(report=report,numts=rn_numts,ax=ax2,colors=colors,raw=False,cmap=False)
 
-radar_plot(
-    categories=optimization.drop(columns=['model','Jaccard']).columns.str.replace('_',' ').str.replace('test ',''),
-    input_df=optimization.drop(columns=['model','Jaccard']),
-    names=optimization['model'].values,
-    to_be_higlighted='Optim',
-    lim=(.88,.98),
-    ax=ax4,
-    legend_pos=(.75,-.15)
-)
-ax4.set_title('D',fontsize=16,x=-.25,y=1.05)
+norm=Normalize(vmin=min(values),vmax=max(values))
+cmap=plt.get_cmap('Reds')
+colors=[cmap(norm(value)) for value in rn_numts['genomic_length'].tolist()]
+sm=ScalarMappable(cmap=cmap,norm=norm)
+sm.set_array([])
 
-params=optimized.columns[optimized.columns.str.contains('param_|polygon')]
-heatmap_input=optimized.sort_values(by='polygon_area')[params]
-heatmap_input=heatmap_input.apply(lambda col: (col-col.min())/(col.max()-col.min())).T
-heatmap_input.index=heatmap_input.index.str.replace('param_','')
-sns.heatmap(heatmap_input,cmap='coolwarm_r',ax=ax5)
-ax5.set_xticklabels([])
-ax5.set_yticks(np.arange(0,len(heatmap_input.index))+0.5)
-ax5.set_yticklabels(labels=heatmap_input.index,fontsize=8)
-cbar = ax5.collections[0].colorbar
-cbar.ax.tick_params(labelsize=8)
-ax5.set_title('E',fontsize=16,x=-.25,y=1.05)
+chord_plotter(report=report,numts=rn_numts,ax=ax3,colors=colors,cmap=True)
+chord_plotter(report=report,numts=rn_numts,ax=ax4,colors=colors,raw=False,cmap=True)
 
-plt.subplots_adjust(left=0.1,
-                    bottom=0.1, 
-                    right=0.9, 
-                    top=0.9, 
-                    wspace=0.4, 
-                    hspace=0.4)
+ax1.set_title('A',fontsize=16,x=.1,y=1.05)
+ax2.set_title('B',fontsize=16,x=.1,y=1.05)
+ax3.set_title('C',fontsize=16,x=.1,y=1.05)
+cbar=plt.colorbar(sm,ax=ax3)
+cbar.set_label('NUMT size (bp)',fontsize=6)
+cbar.set_ticklabels([0,200,400,600,800,1000,1200,1400],fontsize=6)
 
+ax4.set_title('D',fontsize=16,x=.1,y=1.05)
+cbar=plt.colorbar(sm,ax=ax4)
+cbar.set_label('NUMT size (bp)',fontsize=6)
+cbar.set_ticklabels([0,200,400,600,800,1000,1200,1400],fontsize=6)
 
-#plt.savefig('../results/ml_plot.png',dpi=800,bbox_inches='tight')
+plt.savefig('../results/sample_chords.png',dpi=800,bbox_inches='tight')
