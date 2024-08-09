@@ -69,7 +69,12 @@ export_func.describe_functionality()
 connection=sqlite3.connect('MANUDB_newest.db')
 cursor=connection.cursor()
 
-#get the organism names by querying the DB
+#########
+result=cursor.execute("SELECT name FROM sqlite_master")
+st.write(result.fetchall())
+#########
+
+""""""#get the organism names by querying the DB
 
 organism_name=st.selectbox(
     label='Please select an organism',
@@ -247,4 +252,4 @@ if organism_name!=None:
                     mime=mimes[plot_format]
                 )
         except Exception as e:
-            st.error(body='Something went wrong; please contact the maintainer!')
+            st.error(body='Something went wrong; please contact the maintainer!')""""""
