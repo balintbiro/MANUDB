@@ -52,12 +52,12 @@ class MANUDB:
     def status(self)->st.markdown:
         return st.markdown(
             '''<div style="text-align: justify;">
-            MANUDB currently contains 79 649 NUMTs derived from 153 mammalian genomes of NCBI. These 153 genomes belong to 20 taxonomical orders.
+            MANUDB currently contains 100 043 NUMTs derived from 192 mammalian genomes of NCBI. These 192 genomes belong to 20 taxonomical orders.
             It supports the retrieval of species specific datasets into a format based on the end user's preference. 
             During the export one can download 14 features (e value, genomic identifier, genomic start position, mitochondrial start position, genomic length,
             mitochondrial length, genomic strand, mitochondrial strand, genomic size, genomic sequence, mitochondrial sequence, genus name, family name and order name).
             Furthermore, MANUDB makes specific NUMT visualizations accessible in downloadable format.
-            It is also possible with MANUDB to perform NUMT predictions on .fasta files and on sequences.
+            It is also possible with MANUDB to perform NUMT predictions on .fasta style sequences.
             </div>''',
             unsafe_allow_html=True
         )
