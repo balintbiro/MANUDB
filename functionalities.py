@@ -283,5 +283,5 @@ class Visualize:
         for link in links:
             circos.link(link[0],link[1],color=name2color[link[1][0]])
         circos.plotfig(ax=ax)
-        plt.title(f"{organism_name.replace('_',' ')} NUMts - MANUDB",x=.5,y=-0.1)
+        plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=-0.1)
         return fig
