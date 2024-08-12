@@ -212,7 +212,7 @@ organism_name=st.selectbox(
     index=None,
     key='visualize_organism_selection'
 )
-st.set_option('deprecation.showPyplotGlobalUse', False)
+#st.set_option('deprecation.showPyplotGlobalUse', False)
 if organism_name!=None:
     plot_type=st.selectbox(
         label="Please select a plot type to visualize your selected organism's NUMTs",
