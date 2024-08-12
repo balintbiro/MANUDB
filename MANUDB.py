@@ -248,5 +248,5 @@ if organism_name!=None:
                     mime=mimes[plot_format]
                 )
         except Exception as e:
-            st.error(body='Something went wrong; please contact the maintainer!')
+            st.error(body='Something went wrong; please contact the maintainers at biro[dot]balint[at]uni-mate[dot]hu!')
 
