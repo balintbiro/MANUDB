@@ -163,7 +163,9 @@ class Visualize:
         return st.markdown(
             '''<div style="text-align: justify;">
             The visualize functionality makes it possible to visualize the genetic flow from the mitochondria to the
-            nuclear genome. MANUDB offers four types of chord diagrams to display NUMTs of a particular genome. 
+            nuclear genome. MANUDB offers four types of 
+            <a href="https://en.wikipedia.org/wiki/Chord_diagram_(information_visualization)">chord diagrams</a> to 
+            display NUMTs of a particular genome. 
             Unplaced and unlocalized scaffolds are plotted too in a merged form. We define raw version of visualization 
             where all genomic parts are displayed with their corresponding sizes in bp. The genomic parts are color coded 
             with randomly chosen colors (Figure 1./A). The same raw input can be visualized with proportional coloring 
