@@ -154,7 +154,7 @@ def predict():
         items=pd.Series(items)
         headers=items[items.str.startswith('>')].str[1:]
         sequences=items[~items.str.startswith('>')].str.upper()
-	sequences=sequences[sequences!='']
+        sequences=sequences[sequences!='']
         kmer_counts=[]
         for sequence in sequences:
             kmer_per_seq=[]
