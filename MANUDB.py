@@ -1,3 +1,3 @@
 import streamlit as st
 
-st.write('Sorry but MANUDB is currently under update, please check back in some days...')
+st.write("Sorry but MANUDB is currently down for update, please check back in some days...")
