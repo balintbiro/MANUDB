@@ -1,0 +1,7 @@
+{
+    "Statistic": "SELECT * FROM statistic WHERE id LIKE '%{organism_name}%'",
+    "Taxonomy": "SELECT * FROM taxonomy WHERE organism_name LIKE '%{organism_name}%'",
+    "Location": "SELECT * FROM location WHERE id LIKE '%{organism_name}%'",
+    "Sequence (genomic)": "None",
+    "Sequence (mitochondrial)": "Nones"
+}
