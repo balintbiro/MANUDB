@@ -1,4 +1,4 @@
-
+*.json
 *.svg
 *.ipynb
 leftover_numts.py
