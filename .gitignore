@@ -1,4 +1,4 @@
-
+*.json
 *.svg
 *.ipynb
 leftover_numts.py
@@ -7,3 +7,8 @@ assemblies_json.py
 MANUDB_class.py
 MANUDB_process.py
 MANUDB_process_mod.py
+*.afa
+MTannotations.R
+prep_files/biomaRt.R
+sequences.fasta
+temp_files/regions.csv
