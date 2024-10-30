@@ -35,7 +35,7 @@ def RefSeq2Chr(orgname:str)->pd.DataFrame:
         Loc,Map=groupedLoc.get_group(orgname),groupedMap.get_group(orgname)
         localMapper=Map.dropna(subset="refseq")
         localMapper=localMapper[localMapper["refseq"]!="na"].set_index("refseq")["name"]
-        Loc["chr/name"]=Loc["genomic_id"].apply(lambda gid: localMapper.get(gid,np.nan)).values
+        Loc["chr_name"]=Loc["genomic_id"].apply(lambda gid: localMapper.get(gid,np.nan)).values
         return Loc
     except KeyError:
         return np.nan
@@ -45,4 +45,4 @@ chr_ids=names.apply(RefSeq2Chr)
 #write output
 regions=pd.concat(chr_ids.dropna().tolist())
 regions["genomic_end"]=regions["genomic_start"]+regions["genomic_length"]
-regions[["id","genomic_start","genomic_end"]].to_csv("temp_files/regions.csv")
+regions[["id","chr_name","genomic_start","genomic_end"]].to_csv("temp_files/regions.csv")
