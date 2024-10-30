@@ -33,6 +33,7 @@ import sqlite3
 import xgboost
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from pycirclize import Circos
 from itertools import product
 import matplotlib.pyplot as plt
@@ -112,7 +113,7 @@ if organism_name!=None:
         key='table_selection'
     )
     if query!=None:
-        if query not in ["Sequence (genomic)","Sequence (mitochondrial)"]:
+        if (query not in ["Sequence (genomic)","Sequence (mitochondrial)"]):
             csv = convert_df(pd.read_sql_query(
                 queries[query].format(organism_name=organism_name.lower()),
                 connection
@@ -223,6 +224,7 @@ if 'prediction' in st.session_state:
 #########################################################################Visualize function
 st.divider()
 st.header("Visualize")
+st.subheader("Single species usecase")
 visualize_func=Visualize()
 visualize_func.describe_functionality()
 st.image(
@@ -278,3 +280,64 @@ if organism_name!=None:
                 )
         except Exception as e:
             st.error(body='Something went wrong; please contact the maintainers at biro[dot]balint[at]uni-mate[dot]hu!')
+
+st.subheader("Comparative usecase")
+visualize_func.describe_comparison()
+col1,col2=st.columns(2)
+compOrgnames=(pd.read_sql_query(
+        "SELECT id FROM location",con=connection
+    )["id"].str.split("_").str[:2].str.join("_")).sort_values().unique()
+#st.dataframe(compOrgnames)
+with col1:
+    org1=st.selectbox(
+        label='',
+        placeholder='Select species 1',
+        index=None,
+        options=compOrgnames,
+        key='Species1Selection'
+    )
+
+with col2:
+    org2=st.selectbox(
+        label='',
+        placeholder='Select species 1',
+        index=None,
+        options=compOrgnames,
+        key='Species2Selection'
+    )
+
+if (org1!=None) and (org2!=None):
+    Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{org1}%' OR id LIKE '{org2}%'",con=connection)
+    Compdf["Species"]=Compdf["id"].str[:2]+" "+Compdf["id"].str.split("_").str[1].str[:2]
+    orgs=Compdf["Species"].unique()
+    Compdf["Relative NUMT size"]=Compdf["genomic_length"]/Compdf["genomic_size"]
+    Compdf["genomic_size"]=Compdf["genomic_size"]/1000_000
+
+    fig=plt.figure()
+    fig.set_figheight(6)
+    fig.set_figwidth(6)
+
+    ax1=plt.subplot2grid(shape=(3,3),loc=(0,0),colspan=1)
+    sns.boxplot(data=Compdf,x="Species",y="genomic_length",ax=ax1,showfliers=False,hue="Species",order=orgs,palette=["lightblue","orange"],width=.4)
+    ax1.set_ylabel("NUMT size\n(bp)")
+
+    ax2=plt.subplot2grid(shape=(3,3),loc=(0,1),colspan=1)
+    sns.boxplot(data=Compdf,x="Species",y="Relative NUMT size",ax=ax2,showfliers=False,hue="Species",order=orgs,palette=["lightblue","orange"],width=.4)
+
+    ax3=plt.subplot2grid(shape=(3,3),loc=(1,0),colspan=1)
+    Regdf=Compdf.groupby(by=["Species","genomic_id","genomic_size"])["genomic_length"].sum().reset_index()
+    st.dataframe(Compdf)
+    sns.regplot(data=Regdf[Regdf["Species"]==orgs[0]],x="genomic_size",y="genomic_length",ax=ax3,color="lightblue")
+    ax3.set(xlabel="Size of genome part\n(Mb)",ylabel="NUMT size\n(bp)")
+
+    ax4=plt.subplot2grid(shape=(3,3),loc=(1,1),colspan=1)
+    sns.regplot(data=Regdf[Regdf["Species"]==orgs[1]],x="genomic_size",y="genomic_length",ax=ax4,color="orange")
+    ax4.set(xlabel="Size of genome part\n(Mb)",ylabel="NUMT size\n(bp)")
+
+    ax5=plt.subplot2grid(shape=(3,3),loc=(2,0),colspan=2)
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
+
+

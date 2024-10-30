@@ -198,6 +198,15 @@ class Visualize:
             </div>''',
             unsafe_allow_html=True
         )
+
+    def describe_comparison(self):
+        return st.markdown(
+            '''<div style="text-align: justify;">
+            MANUDB makes it possible to visualize and comapre distinct species' NUMTs.
+            To perform comparative analysis please select your species.
+            </div>''',
+            unsafe_allow_html=True
+        )
     
     def get_dfs(self,organism_name)->tuple:
         with open('queries.json')as json_file:
