@@ -16,7 +16,7 @@ cursor=connection.cursor()
 #add tables
 cursor.execute("CREATE TABLE statistic(id, eg2_value, e_value)")
 cursor.execute("CREATE TABLE location(id, genomic_id, genomic_size, genomic_start, mitochondrial_start, genomic_length, mitochondrial_length, genomic_strand, mitochondrial_strand)")
-cursor.execute("CREATE TABLE sequence(id, genomic_sequence, mitochondrial_sequence)")
+cursor.execute("CREATE TABLE genes(gene,mt_gene)")
 cursor.execute("CREATE TABLE taxonomy(organism_name, taxonomy_order, family, genus, assembly_version)")
 
 #sanity check->should list all the table names
