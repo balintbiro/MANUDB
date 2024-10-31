@@ -307,37 +307,64 @@ with col2:
     )
 
 if (org1!=None) and (org2!=None):
+    MtSizes=pd.read_csv("MtSizes.csv",index_col=0)["mt_size"]
     Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{org1}%' OR id LIKE '{org2}%'",con=connection)
+    Compdf["id"]=Compdf["id"].str.split("_").str[:2].str.join("_")
+    Compdf=Compdf.groupby(by="id").apply(
+        lambda subdf:
+        subdf[(subdf["mitochondrial_start"]+subdf["mitochondrial_length"])<MtSizes[subdf["id"].unique()[0]]]
+    ).reset_index(drop=True)
+
     Compdf["Species"]=Compdf["id"].str[:2]+" "+Compdf["id"].str.split("_").str[1].str[:2]
+
     orgs=Compdf["Species"].unique()
+
     Compdf["Relative NUMT size"]=Compdf["genomic_length"]/Compdf["genomic_size"]
     Compdf["genomic_size"]=Compdf["genomic_size"]/1000_000
 
-    fig=plt.figure()
-    fig.set_figheight(6)
-    fig.set_figwidth(6)
+    fig = plt.figure(figsize=(10, 6))
 
-    ax1=plt.subplot2grid(shape=(3,3),loc=(0,0),colspan=1)
+    # First row with 4 square subplots
+    ax1 = plt.subplot2grid(shape=(2, 4), loc=(0, 0), colspan=1)  # (row, col)
     sns.boxplot(data=Compdf,x="Species",y="genomic_length",ax=ax1,showfliers=False,hue="Species",order=orgs,palette=["lightblue","orange"],width=.4)
-    ax1.set_ylabel("NUMT size\n(bp)")
+    ax1.set_ylabel("NUMT size (bp)")
 
-    ax2=plt.subplot2grid(shape=(3,3),loc=(0,1),colspan=1)
+    ax2 = plt.subplot2grid(shape=(2, 4), loc=(0, 1), colspan=1)
     sns.boxplot(data=Compdf,x="Species",y="Relative NUMT size",ax=ax2,showfliers=False,hue="Species",order=orgs,palette=["lightblue","orange"],width=.4)
 
-    ax3=plt.subplot2grid(shape=(3,3),loc=(1,0),colspan=1)
+    ax3 = plt.subplot2grid(shape=(2, 4), loc=(0, 2), colspan=1)
     Regdf=Compdf.groupby(by=["Species","genomic_id","genomic_size"])["genomic_length"].sum().reset_index()
-    st.dataframe(Compdf)
     sns.regplot(data=Regdf[Regdf["Species"]==orgs[0]],x="genomic_size",y="genomic_length",ax=ax3,color="lightblue")
-    ax3.set(xlabel="Size of genome part\n(Mb)",ylabel="NUMT size\n(bp)")
+    ax3.set(xlabel="Size of genome part (Mb)",ylabel="NUMT size (bp)")
 
-    ax4=plt.subplot2grid(shape=(3,3),loc=(1,1),colspan=1)
+    ax4 = plt.subplot2grid(shape=(2, 4), loc=(0, 3), colspan=1)
     sns.regplot(data=Regdf[Regdf["Species"]==orgs[1]],x="genomic_size",y="genomic_length",ax=ax4,color="orange")
-    ax4.set(xlabel="Size of genome part\n(Mb)",ylabel="NUMT size\n(bp)")
+    ax4.set(xlabel="Size of genome part (Mb)",ylabel="NUMT size (bp)")
 
-    ax5=plt.subplot2grid(shape=(3,3),loc=(2,0),colspan=2)
+    # Second row with 2 rectangular subplots
+    ax5 = plt.subplot2grid(shape=(2, 4), loc=(1, 0), colspan=2)
+    sns.histplot(
+        np.concatenate(
+            Compdf[Compdf["Species"]==orgs[0]].apply(
+                lambda row:
+                np.arange(start=row["mitochondrial_start"],stop=(row["mitochondrial_start"]+row["mitochondrial_length"]),step=10,dtype=int),axis=1
+            ).values
+        ),
+        bins=200,element="step",color="lightblue",ax=ax5
+    )
+
+    ax6 = plt.subplot2grid(shape=(2, 4), loc=(1, 2), colspan=2)
+    sns.histplot(
+        np.concatenate(
+            Compdf[Compdf["Species"]==orgs[1]].apply(
+                lambda row:
+                np.arange(start=row["mitochondrial_start"],stop=(row["mitochondrial_start"]+row["mitochondrial_length"]),step=10,dtype=int),axis=1
+            ).values
+        ),
+        bins=200,element="step",color="orange",ax=ax6
+    )
+
 
     plt.tight_layout()
     st.pyplot(fig)
-
-
 
