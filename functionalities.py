@@ -25,14 +25,18 @@
 ##################################################################################################################
 
 import json
+import joblib
 import sqlite3
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import streamlit as st
 from pycirclize import Circos
+from itertools import product
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
+from sklearn.metrics import pairwise_distances
 
 class MANUDB:
     """
@@ -102,10 +106,17 @@ class MANUDB:
         )
     
 class Export:
-    def __init__(self):
+    """
+    Class for exporting part(s) of MANUDB based on your preferred species of interest.
+    """
+    def __init__(self,connection:sqlite3.Connection):
         self.name='Export'
+        self.connection=connection
 
     def describe_functionality(self):
+        """
+        Describe the usage of this method.
+        """
         return st.markdown(
             '''<div style="text-align: justify;">
             This functionality makes it possible to export the selection of NUMTs based on 
@@ -119,6 +130,56 @@ class Export:
             </div>''',
             unsafe_allow_html=True
         )
+
+    def get_names(self)->np.array:
+        """
+        List the names that can be used to query the DB with this method.
+        """
+        names=(
+                pd
+                .read_sql_query("SELECT id FROM location",con=self.connection)
+                ["id"]
+                .str.split("_")
+                .str[:2]
+                .str.join("_")
+                .drop_duplicates()
+                .sort_values()
+                .values
+            )
+        return names
+
+    def get_downloadable(self,organism_name:str,queries:dict,query=None)->None:
+        """
+        Query SQL and load the part into a df which can be downloaded into a csv file.
+        """
+        def convert_df(df):
+            return df.to_csv(index=False).encode('utf-8')
+        if query!=None:
+            if (query not in ["Sequence (genomic)","Sequence (mitochondrial)"]):
+                csv = convert_df(pd.read_sql_query(
+                    queries[query].format(organism_name=organism_name.lower()),
+                    self.connection
+                ))
+            else:
+                if query=="Sequence (genomic)":
+                    df=pd.read_csv("genomic_sequences.csv",index_col="id")
+                    df=df[df.index.str.contains(organism_name)]
+                    df['id']=df.index
+                    csv=convert_df(df)
+                elif query=="Sequence (mitochondrial)":
+                    df=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
+                    df=df[df.index.str.contains(organism_name)]
+                    df['id']=df.index
+                    csv=convert_df(df)
+            if csv:
+                st.download_button(
+                    f"Download {organism_name.lower().replace(' ','_')}_numts.csv",
+                    csv,
+                    f"{organism_name.lower().replace(' ','_')}_numts.csv",
+                    "text/csv",
+                    key='download-DBpart'
+                )
+
     
 class Predict:
     """
@@ -127,6 +188,8 @@ class Predict:
     """
     def __init__(self):
         self.name='Predict'
+        self.trained_clf=joblib.load('optimized_model.pkl')
+        self.best_features=pd.read_csv('best_features.csv',index_col=0)['0'].tolist()
 
     def describe_functionality(self):
         return st.markdown(
@@ -146,27 +209,36 @@ class Predict:
         )
     
     def predict(self):
-        items=st.session_state.text_area_content.split('\n')
-        headers,sequences=[],[]
-        items=pd.Series(items)
-        headers=items[items.str.startswith('>')].str[1:]
-        sequences=items[~items.str.startswith('>')].str.upper()
-        kmer_counts=[]
-        for sequence in sequences:
-            kmer_per_seq=[]
-            for kmer in kmers:
-                kmer_per_seq.append(sequence.count(kmer))
-            kmer_counts.append(kmer_per_seq)
-        df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
-        df=df[best_features]
-        X=(df-np.mean(df))/np.std(df)
-        prediction=pd.DataFrame()
-        prediction['header']=headers
-        prediction['label']=trained_clf.predict(X.values)
-        prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
-        prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
-        if 'prediction' not in st.session_state:
-            st.session_state['prediction']=prediction
+        """
+        Method for predict whether the provided sequence(s) is(are) NUMT(s).
+        """
+        k=3
+        bases=list('ACGT')
+        kmers=[''.join(p) for p in product(bases, repeat=k)]
+        if st.session_state["sequence"]!="":
+            items=st.session_state["sequence"].split('\n')
+            headers,sequences=[],[]
+            for index,item in enumerate(items):
+                if ">" in item:
+                    headers.append(item[1:])
+                    sequences.append(items[index+1])
+            kmer_counts=[]
+            for sequence in sequences:
+                kmer_per_seq=[]
+                for kmer in kmers:
+                    kmer_per_seq.append(sequence.count(kmer))
+                kmer_counts.append(kmer_per_seq)
+            df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
+            df=df[self.best_features]
+            X=(df-np.mean(df))/np.std(df)
+            prediction=pd.DataFrame()
+            prediction['header']=headers
+            prediction['label']=self.trained_clf.predict(X.values)
+            prediction['prob-NUMT']=self.trained_clf.predict_proba(X.values)[:,1]
+            prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
+            st.session_state["prediction"]=prediction
+        else:
+            pass
     
 class Visualize:
     """
@@ -195,15 +267,6 @@ class Visualize:
             sizes (Figure 1. /B and Figure 1./D respectively). The optimized visualization is focusing on the mitochondrion. 
             Contrary to the raw form of visualization this type is more appropriate if someone would like to visualize 
             the source of the NUMTs within the mitochondrion.
-            </div>''',
-            unsafe_allow_html=True
-        )
-
-    def describe_comparison(self):
-        return st.markdown(
-            '''<div style="text-align: justify;">
-            MANUDB makes it possible to visualize and comapre distinct species' NUMTs.
-            To perform comparative analysis please select your species.
             </div>''',
             unsafe_allow_html=True
         )
@@ -313,3 +376,110 @@ class Visualize:
         circos.plotfig(ax=ax)
         plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=-0.1)
         return fig
+
+
+class Compare:
+    def __init__(self,connection:sqlite3.Connection):
+        self.name='Compare'
+        self.connection=connection
+
+    def describe_functionality(self)->st.markdown:
+        return st.markdown(
+            '''<div style="text-align: justify;">
+            MANUDB makes it possible to visualize and comapre distinct species' NUMTs.
+            To perform comparative analysis please select your species.
+            </div>''',
+            unsafe_allow_html=True
+        )
+
+    def get_names(self)->np.array:
+        return (
+                pd
+                .read_csv("MtSizes.csv")["orgname"]
+                .sort_values()
+                .values
+            )
+
+    def get_compdf(self,MtSizes:pd.Series,orgs:list)->tuple:
+        Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
+        Compdf["SpeciesFull"]=Compdf["id"].str.split("_").str[:2].str.join("_")
+        Compdf=Compdf.groupby(by="SpeciesFull").apply(
+            lambda subdf:
+            subdf[(subdf["mitochondrial_start"]+subdf["mitochondrial_length"])<MtSizes[subdf["SpeciesFull"].unique()[0]]]
+        ).reset_index(drop=True)
+        Compdf["SpeciesShort"]=Compdf["SpeciesFull"].str[:2]+" "+Compdf["SpeciesFull"].str.split("_").str[1].str[:2]
+        Compdf["Relative NUMT size"]=Compdf["genomic_length"]/Compdf["genomic_size"]
+        Compdf["genomic_size"]=Compdf["genomic_size"]/1000_000
+        Compdf.rename(columns={"genomic_length":"NUMT size (bp)"},inplace=True)
+        return Compdf
+
+    def get_regdf(self,Compdf:pd.DataFrame,orgs:list)->tuple:
+        Regdf=(
+            Compdf
+            .groupby(by=["SpeciesFull","SpeciesShort","genomic_id","genomic_size"])["NUMT size (bp)"]
+            .sum()
+            .reset_index()
+            )
+        return (Regdf[Regdf["SpeciesFull"]==orgs[0]],Regdf[Regdf["SpeciesFull"]==orgs[1]])
+
+    def boxplot(self,Compdf:pd.DataFrame,orgs:list,y_name:str,ax)->None:
+        sns.boxplot(
+                data=Compdf,x="SpeciesShort",y=y_name,
+                ax=ax,showfliers=False,hue="SpeciesShort",
+                palette=["lightblue","orange"],
+                width=.4,order=Compdf["SpeciesShort"].unique()
+            )
+        ax.set_ylabel(y_name)
+
+    def regplot(self,Regdf:pd.DataFrame,color:str,ax)->None:
+        sns.regplot(
+                data=Regdf,x="genomic_size",y="NUMT size (bp)",
+                ax=ax,color=color
+            )
+        ax.set(xlabel="Size of genome part (Mb)",ylabel="Cumulative NUMT size (bp)")
+
+    def histplot(self,Compdf:pd.DataFrame,org:str,color:str,ax)->None:
+        sns.histplot(
+            np.concatenate(
+                Compdf[Compdf["SpeciesFull"]==org].apply(
+                    lambda row:
+                    np.arange(start=row["mitochondrial_start"],stop=(row["mitochondrial_start"]+row["mitochondrial_length"]),step=10,dtype=int),axis=1
+                ).values
+            ),
+            bins=200,element="step",color=color,ax=ax
+        )
+        ax.set_xlabel("Mitochondrial nucleotides")
+
+    def heatmap(self,orgs:list,Compdf:pd.DataFrame,ax)->None:
+        k=3
+        nucleotides=list('ACGT')
+        kmers=[''.join(nucleotide) for nucleotide in product(nucleotides, repeat=k)]
+        sequences=pd.read_csv("genomic_sequences.csv")
+        sequences=Compdf.join(sequences.set_index("id"),on="id")[["id","genomic_sequence"]]
+        sequences=sequences[
+            (sequences["id"].str.contains(orgs[0]))
+            |(sequences["id"].str.contains(orgs[1]))
+        ]
+        colors=sequences["id"].str.contains(orgs[0]).replace([True,False],["lightblue","orange"])
+        sequences["genomic_sequence"]=sequences["genomic_sequence"].str.upper().str.replace("-","")
+        def getKmers(sequence):
+            kmerCounts=[]
+            for kmer in kmers:
+                kmerCounts.append(sequence.count(kmer))
+            return (pd.Series(kmerCounts)/len(sequence)).values
+        kmer_counts=sequences["genomic_sequence"].apply(getKmers).tolist()
+        distances=pairwise_distances(kmer_counts)
+        sns.heatmap(
+                1-distances,
+                cmap="coolwarm",
+                ax=ax,
+                cbar_kws={"orientation": "horizontal","shrink":.5,"label":"K-mer based similarity"}
+            )
+        ax.set_xticks(ticks=[],labels=[])
+        ax.set_yticks(ticks=[],labels=[])
+        for i, color in enumerate(colors):
+            ax.add_patch(plt.Rectangle(xy=(-0.03, i), width=0.025, height=1, color=color, lw=0,
+                                       transform=ax.get_yaxis_transform(), clip_on=False))
+            ax.add_patch(plt.Rectangle(xy=(i, 1.03), width=1, height=0.05, color=color, lw=0,
+                                       transform=ax.get_xaxis_transform(), clip_on=False))
+
