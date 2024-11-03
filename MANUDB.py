@@ -257,6 +257,7 @@ MtSizes=pd.read_csv("MtSizes.csv",index_col=0)["mt_size"]
 if (org1!=None) and (org2!=None):
     orgs=[org1,org2]
     Compdf=compare.get_compdf(MtSizes=MtSizes,orgs=orgs)
+    Identitydf=compare.get_seq_identity(orgs=orgs)
 
     fig=plt.figure(figsize=(8,10))
 
@@ -265,7 +266,7 @@ if (org1!=None) and (org2!=None):
     compare.boxplot(Compdf=Compdf,orgs=orgs,y_name="NUMT size (bp)",ax=ax1)
 
     ax2=plt.subplot2grid(shape=(3,4), loc=(0, 1), colspan=1)
-    compare.boxplot(Compdf=Compdf,orgs=orgs,y_name="Relative NUMT size",ax=ax2)
+    compare.boxplot(Compdf=Identitydf,orgs=orgs,y_name="Sequence identity",ax=ax2)
 
     Regdf1,Regdf2=compare.get_regdf(Compdf=Compdf,orgs=orgs)
     ax3=plt.subplot2grid(shape=(3,4), loc=(0, 2), colspan=1)
@@ -275,10 +276,10 @@ if (org1!=None) and (org2!=None):
     compare.regplot(Regdf=Regdf2,color="orange",ax=ax4)
 
     ax5=plt.subplot2grid(shape=(3,4), loc=(1, 0), colspan=2)
-    compare.histplot(Compdf=Compdf,org=orgs[0],color="lightblue",ax=ax5)
+    compare.histplot(Compdf=Compdf,org=orgs[0],color="lightblue",MtSizes=MtSizes,ax=ax5)
 
     ax6=plt.subplot2grid(shape=(3,4), loc=(1, 2), colspan=2)
-    compare.histplot(Compdf=Compdf,org=orgs[1],color="orange",ax=ax6)
+    compare.histplot(Compdf=Compdf,org=orgs[1],color="orange",MtSizes=MtSizes,ax=ax6)
 
     ax7=plt.subplot2grid(shape=(3,4),loc=(2,0),colspan=4)
     compare.heatmap(orgs=orgs,Compdf=Compdf,ax=ax7)
@@ -291,3 +292,4 @@ if (org1!=None) and (org2!=None):
 
     plt.tight_layout()
     st.pyplot(fig)
+    st.dataframe(compare.get_seq_identity(orgs=orgs))

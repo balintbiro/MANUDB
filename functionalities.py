@@ -387,7 +387,7 @@ class Compare:
         return st.markdown(
             '''<div style="text-align: justify;">
             MANUDB makes it possible to visualize and comapre distinct species' NUMTs.
-            To perform comparative analysis please select your species.
+            To perform comparative analysis please select your species of interest.
             </div>''',
             unsafe_allow_html=True
         )
@@ -422,6 +422,28 @@ class Compare:
             )
         return (Regdf[Regdf["SpeciesFull"]==orgs[0]],Regdf[Regdf["SpeciesFull"]==orgs[1]])
 
+    def get_seq_identity(self,orgs:list)->pd.DataFrame:
+        Gseqs=pd.read_csv("genomic_sequences.csv")
+        Mtseqs=pd.read_csv("mitochondrial_sequences.csv")
+        seqs=Gseqs.join(Mtseqs.set_index("id"),on="id")
+        seqs=seqs[
+            (seqs["id"].str.contains(orgs[0]))
+            |(seqs["id"].str.contains(orgs[1]))
+        ]
+        seqs["genomic_sequence"]=seqs["genomic_sequence"].str.upper()
+        seqs["mitochondrial_sequence"]=seqs["mitochondrial_sequence"].str.upper()
+        def identity(row)->float:
+            Gseq=list(row["genomic_sequence"])
+            Mtseq=list(row["mitochondrial_sequence"])
+            sequences=pd.DataFrame(columns=["G","Mt"])
+            sequences["G"]=Gseq
+            sequences["Mt"]=Mtseq
+            return (sequences["G"]==sequences["Mt"]).astype(int).sum()/sequences.shape[0]
+        seqs["Sequence identity"]=seqs.apply(identity,axis=1)
+        SpeciesFull=seqs["id"].str.split("_").str[:2].str.join("_")
+        seqs["SpeciesShort"]=SpeciesFull.str[:2]+" "+SpeciesFull.str.split("_").str[1].str[:2]
+        return seqs
+
     def boxplot(self,Compdf:pd.DataFrame,orgs:list,y_name:str,ax)->None:
         sns.boxplot(
                 data=Compdf,x="SpeciesShort",y=y_name,
@@ -429,7 +451,7 @@ class Compare:
                 palette=["lightblue","orange"],
                 width=.4,order=Compdf["SpeciesShort"].unique()
             )
-        ax.set_ylabel(y_name)
+        ax.set(ylabel=y_name,xlabel="Species")
 
     def regplot(self,Regdf:pd.DataFrame,color:str,ax)->None:
         sns.regplot(
@@ -438,7 +460,7 @@ class Compare:
             )
         ax.set(xlabel="Size of genome part (Mb)",ylabel="Cumulative NUMT size (bp)")
 
-    def histplot(self,Compdf:pd.DataFrame,org:str,color:str,ax)->None:
+    def histplot(self,Compdf:pd.DataFrame,org:str,color:str,MtSizes:pd.Series,ax)->None:
         sns.histplot(
             np.concatenate(
                 Compdf[Compdf["SpeciesFull"]==org].apply(
@@ -448,6 +470,8 @@ class Compare:
             ),
             bins=200,element="step",color=color,ax=ax
         )
+        ax.set_xticks(ticks=np.arange(start=0,stop=MtSizes[org],step=2000))
+        ax.set_xticklabels(np.arange(start=0,stop=MtSizes[org],step=2000),rotation=45)
         ax.set_xlabel("Mitochondrial nucleotides")
 
     def heatmap(self,orgs:list,Compdf:pd.DataFrame,ax)->None:
