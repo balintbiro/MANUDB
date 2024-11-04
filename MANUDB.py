@@ -281,9 +281,6 @@ if (org1!=None) and (org2!=None):
     ax6=plt.subplot2grid(shape=(3,4), loc=(1, 2), colspan=2)
     compare.histplot(Compdf=Compdf,org=orgs[1],color="orange",MtSizes=MtSizes,ax=ax6)
 
-    ax7=plt.subplot2grid(shape=(3,4),loc=(2,0),colspan=4)
-    compare.heatmap(orgs=orgs,Compdf=Compdf,ax=ax7)
-
     handles = [
         plt.Line2D([0], [0], color="lightblue", lw=4, label=f"{orgs[0]} ({orgs[0][:2]} {orgs[0].split("_")[1][:2]})"),
         plt.Line2D([0], [0], color="orange", lw=4, label=f"{orgs[1]} ({orgs[1][:2]} {orgs[1].split("_")[1][:2]})")
