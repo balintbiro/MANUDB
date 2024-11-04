@@ -285,11 +285,10 @@ if (org1!=None) and (org2!=None):
     compare.heatmap(orgs=orgs,Compdf=Compdf,ax=ax7)
 
     handles = [
-        plt.Line2D([0], [0], color="lightblue", lw=4, label=orgs[0]),
-        plt.Line2D([0], [0], color="orange", lw=4, label=orgs[1])
+        plt.Line2D([0], [0], color="lightblue", lw=4, label=f"{orgs[0]} ({orgs[0][:2]} {orgs[0].split("_")[1][:2]})"),
+        plt.Line2D([0], [0], color="orange", lw=4, label=f"{orgs[1]} ({orgs[1][:2]} {orgs[1].split("_")[1][:2]})")
     ]
     fig.legend(handles=handles, loc='upper center', ncol=2, frameon=False, fontsize=12)
 
     plt.tight_layout()
     st.pyplot(fig)
-    st.dataframe(compare.get_seq_identity(orgs=orgs))
