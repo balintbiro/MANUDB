@@ -71,5 +71,6 @@ if organism_name!=None:
     count_heatmap.index=sectors.index
     fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap)
     st.pyplot(fig=fig)
-    st.dataframe(size_heatmap["Y"])
+    st.write(sectors["MT"])
+    st.dataframe(numts)
 

@@ -343,23 +343,38 @@ class Visualize:
         return links
 
     def heatmap(self,gid:str,numts:pd.DataFrame,sectors:dict,MtScaler:int,count=False)->list:
-        nbins,tracker,container=20,0,[]
-        heatmap_range=np.linspace(start=0,stop=sectors[gid],num=nbins,dtype=int)
-        subdf=numts[numts["molecule"]==gid]
-        subdf["genomic_end"]=subdf["genomic_start"]+subdf["genomic_length"]
-        if subdf.shape[0]!=0:
+        if gid!="MT":
+            nbins,tracker,container=20,0,[]
+            heatmap_range=np.linspace(start=0,stop=sectors[gid],num=nbins,dtype=int)
+            subdf=numts[numts["molecule"]==gid]
+            subdf["genomic_end"]=subdf["genomic_start"]+subdf["genomic_length"]
+            if subdf.shape[0]!=0:
+                for limit in heatmap_range:
+                    selected_df=subdf[subdf["genomic_start"]<limit]
+                    numt_size=selected_df["genomic_end"]-selected_df["genomic_start"]
+                    if count:
+                        container.append((selected_df.shape[0])-tracker)
+                        tracker=subdf[subdf["genomic_start"]<limit].shape[0]
+                    else:
+                        container.append(numt_size.sum()-tracker)
+                        tracker=numt_size.sum()
+            else:
+                container=nbins*[0]
+            return container
+        else:
+            nbins,tracker,container=100,0,[]
+            heatmap_range=np.linspace(start=0,stop=sectors[gid],num=nbins,dtype=int)/MtScaler
+            numts["mitochondrial_end"]=numts["mitochondrial_start"]+numts["mitochondrial_length"]
             for limit in heatmap_range:
-                selected_df=subdf[subdf["genomic_start"]<limit]
-                numt_size=selected_df["genomic_end"]-selected_df["genomic_start"]
+                selected_df=numts[numts["mitochondrial_start"]<limit]
+                numt_size=selected_df["mitochondrial_end"]-selected_df["mitochondrial_start"]
                 if count:
                     container.append((selected_df.shape[0])-tracker)
-                    tracker=subdf[subdf["genomic_start"]<limit].shape[0]
+                    tracker=numts[numts["mitochondrial_start"]<limit].shape[0]
                 else:
                     container.append(numt_size.sum()-tracker)
                     tracker=numt_size.sum()
-        else:
-            container=nbins*[0]
-        return container
+            return container
 
 
     def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap=pd.Series)->None:
