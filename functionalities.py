@@ -270,6 +270,11 @@ class Visualize:
             </div>''',
             unsafe_allow_html=True
         )
+
+    def get_names(self):
+        with open("assemblies.json")as infile:
+            assemblies=json.load(infile)
+        return pd.Series(assemblies.keys()).sort_values()
     
     def get_dfs(self,organism_name)->tuple:
         with open('queries.json')as json_file:
@@ -299,24 +304,23 @@ class Visualize:
         numts=numts.dropna(subset=['molecule'])
         return (numts,assembly)
     
-    def get_sectors(self,assembly:pd.DataFrame,scaler=1)->dict:
+    def get_sectors(self,assembly:pd.DataFrame)->dict:
         assembly['length']=assembly['length'].astype(int)
-        sectors=assembly.groupby(by='molecule')['length'].sum().reset_index().apply(
-            lambda row: int(int(row['length'])/scaler) if row['molecule']!='MT' else int(row['length']),
-            axis=1
-        )
-        sectors.index=assembly.groupby(by='molecule')['length'].sum().index
+        sectors=assembly.groupby(by='molecule')['length'].sum()
         sectors=sectors[sectors>0]
-        return sectors.to_dict()
+        MtScaler=int(sectors[sectors.index!="MT"].sum()/sectors["MT"])
+        sectors["MT"]=sectors[sectors.index!="MT"].sum()
+        sectors=pd.concat([sectors[sectors.index!="MT"],sectors[sectors.index=="MT"]])
+        return (sectors,MtScaler)
     
-    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame,scaler=1)->list:
+    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame)->list:
         mt_size=assembly[assembly['molecule']=='MT']['length'].values[0]
         fil=(numts['mitochondrial_start']+numts['mitochondrial_length'])<mt_size
         numts=numts[fil]
         links=numts[numts['molecule']!='scaffold'].apply(
             lambda row: (
                 ('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
-                (row['molecule'],int(row['genomic_start']/scaler),int((row['genomic_start']+row['genomic_length'])/scaler))
+                (row['molecule'],int(row['genomic_start']),int((row['genomic_start']+row['genomic_length'])))
             ),axis=1
         ).tolist()
         def get_scf_links(row):
@@ -329,7 +333,7 @@ class Visualize:
                 summation=gid_dict[mod_ids].sum()
             links.append(
                     (('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
-                    ('scaffold',(summation+int(row['genomic_start']))/scaler,(summation+int(row['genomic_start'])+int(row['genomic_length']))/scaler))
+                    ('scaffold',(summation+int(row['genomic_start'])),(summation+int(row['genomic_start'])+int(row['genomic_length']))))
                 )
         id_container=[]
         scf_df=numts[numts['molecule']=='scaffold']
@@ -340,8 +344,8 @@ class Visualize:
 
     def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,proportional_coloring=False)->None:
         fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
-        circos=Circos(sectors,space=5)
-        fontsize=12
+        circos=Circos(sectors,space=2)
+        fontsize=8
         for sector in circos.sectors:
             track=sector.add_track((95,100))
             if proportional_coloring==False:
@@ -374,7 +378,7 @@ class Visualize:
         for link in links:
             circos.link(link[0],link[1],color=name2color[link[1][0]])
         circos.plotfig(ax=ax)
-        plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=-0.1)
+        plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
         return fig
 
 
