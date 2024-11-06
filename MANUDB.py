@@ -64,7 +64,7 @@ organism_name=st.selectbox(
 if organism_name!=None:
     numts,assembly=visualize_func.get_dfs(organism_name=organism_name)
     sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
-    links=visualize_func.get_links(numts=numts,assembly=assembly)
+    links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)
     fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name)
     st.pyplot(fig=fig)
     st.write(MtScaler)

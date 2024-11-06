@@ -313,13 +313,13 @@ class Visualize:
         sectors=pd.concat([sectors[sectors.index!="MT"],sectors[sectors.index=="MT"]])
         return (sectors,MtScaler)
     
-    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame)->list:
+    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame,MtScaler:int)->list:
         mt_size=assembly[assembly['molecule']=='MT']['length'].values[0]
         fil=(numts['mitochondrial_start']+numts['mitochondrial_length'])<mt_size
         numts=numts[fil]
         links=numts[numts['molecule']!='scaffold'].apply(
             lambda row: (
-                ('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
+                ('MT',int(row['mitochondrial_start']*MtScaler),int(row['mitochondrial_start']*MtScaler+row['mitochondrial_length']*MtScaler)),
                 (row['molecule'],int(row['genomic_start']),int((row['genomic_start']+row['genomic_length'])))
             ),axis=1
         ).tolist()
