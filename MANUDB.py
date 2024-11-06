@@ -65,7 +65,11 @@ if organism_name!=None:
     numts,assembly=visualize_func.get_dfs(organism_name=organism_name)
     sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
     links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)
-    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name)
+    size_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,))
+    size_heatmap.index=sectors.index
+    count_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,True,))
+    count_heatmap.index=sectors.index
+    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap)
     st.pyplot(fig=fig)
-    st.write(MtScaler)
+    st.dataframe(size_heatmap["Y"])
 

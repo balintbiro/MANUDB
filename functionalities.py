@@ -332,7 +332,7 @@ class Visualize:
                 mod_ids=mod_ids[mod_ids!=row['genomic_id']].tolist()
                 summation=gid_dict[mod_ids].sum()
             links.append(
-                    (('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
+                    (('MT',int(row['mitochondrial_start']*MtScaler),int(row['mitochondrial_start']*MtScaler+row['mitochondrial_length']*MtScaler)),
                     ('scaffold',(summation+int(row['genomic_start'])),(summation+int(row['genomic_start'])+int(row['genomic_length']))))
                 )
         id_container=[]
@@ -342,41 +342,48 @@ class Visualize:
         scf_df.apply(get_scf_links,axis=1)
         return links
 
-    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,proportional_coloring=False)->None:
+    def heatmap(self,gid:str,numts:pd.DataFrame,sectors:dict,MtScaler:int,count=False)->list:
+        nbins,tracker,container=20,0,[]
+        heatmap_range=np.linspace(start=0,stop=sectors[gid],num=nbins,dtype=int)
+        subdf=numts[numts["molecule"]==gid]
+        subdf["genomic_end"]=subdf["genomic_start"]+subdf["genomic_length"]
+        if subdf.shape[0]!=0:
+            for limit in heatmap_range:
+                selected_df=subdf[subdf["genomic_start"]<limit]
+                numt_size=selected_df["genomic_end"]-selected_df["genomic_start"]
+                if count:
+                    container.append((selected_df.shape[0])-tracker)
+                    tracker=subdf[subdf["genomic_start"]<limit].shape[0]
+                else:
+                    container.append(numt_size.sum()-tracker)
+                    tracker=numt_size.sum()
+        else:
+            container=nbins*[0]
+        return container
+
+
+    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap=pd.Series)->None:
         fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
         circos=Circos(sectors,space=2)
         fontsize=8
         for sector in circos.sectors:
             track=sector.add_track((95,100))
-            if proportional_coloring==False:
-                np.random.seed(0)
-                colors=[
-                    '#'+''.join(list(np.random.choice(a=list('123456789ABCDEF'), size=6))) for i in range(len(sectors.keys()))
-                ]
-                name2color=dict(zip(sectors.keys(), colors))
-                if sector.name=='MT':
-                    track.axis(fc='grey')
-                else:
-                    track.axis(fc=name2color[sector.name])
-            else:
-                track.axis(fc='grey')
+            track.axis(fc='grey')
             if sector.name=='scaffold':
                 track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
             elif len(str(sector.name))==2:
                 track.text(sector.name,color='black',size=fontsize,r=110,orientation='vertical')
             else:
                 track.text(sector.name,color='black',size=fontsize,r=110)
-        if proportional_coloring==True:
-            norm=Normalize(vmin=min(numts['mitochondrial_length']),vmax=max(numts['mitochondrial_length']))
-            cmap=plt.get_cmap('Reds')
-            colors=[cmap(norm(value)) for value in numts['mitochondrial_length'].tolist()]
-            name2color=dict(zip(sectors.keys(), colors))
-            sm=ScalarMappable(cmap=cmap,norm=norm)
-            sm.set_array([])
-            cbar=plt.colorbar(sm,ax=ax)
-            cbar.set_label('NUMT size (bp)',fontsize=fontsize)
+            hms_track=sector.add_track((89,94))
+            hms_track.axis(fc="none")
+            hms_track.heatmap(size_heatmap[sector.name],cmap="Greens")
+
+            hms_track=sector.add_track((83,88))
+            hms_track.axis(fc="none")
+            hms_track.heatmap(count_heatmap[sector.name],cmap="Reds")
         for link in links:
-            circos.link(link[0],link[1],color=name2color[link[1][0]])
+            circos.link(link[0],link[1],color="lightblue")
         circos.plotfig(ax=ax)
         plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
         return fig
