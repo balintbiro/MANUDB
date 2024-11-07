@@ -33,248 +33,44 @@ import sqlite3
 import xgboost
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from pycirclize import Circos
 from itertools import product
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
+from sklearn.metrics import pairwise_distances
 
 #functionalities are written into classes of a separate Python file
-from functionalities import MANUDB,Export,Predict,Visualize
-
-#get orgnames
-numt_orgnames=pd.read_csv('numt_orgnames.csv',index_col=0)['organism_name'].sort_values().tolist()
-assembly_orgnames=pd.read_csv('assembly_orgnames.csv',index_col=0)['0'].sort_values().str.replace('_',' ').tolist()
-
-#set page configuration
-st.set_page_config(page_title='MANUDB',initial_sidebar_state='expanded',page_icon=':cyclone:')
-
-st.html('''<style>hr {border-color: green;}</style>''')
-#########################################################################General Introduction
-st.header("MANUDB")
-st.header("The MAmmalian NUclear mitochondrial sequences DataBase")
-#MANUDB is a general class that describe general info about AMNDUB
-st.subheader('What is MANUDB?')
-manudb=MANUDB()
-manudb.introduction()
-
-st.subheader('Current status and functionalities')
-manudb.status()
-
-st.subheader('Contact and/or bug report')
-manudb.contact()
-
-st.subheader('Upon usage please cite')
-manudb.reference()
-
-#sidebar for navigation between chapters
-with st.sidebar:
-    st.markdown("[MANUDB](#manudb)")
-    st.markdown("[Export](#export)")
-    st.markdown("[Predict](#predict)")
-    st.markdown("[Visualize](#visualize)")
-
-#########################################################################Export function
-st.divider()
-export_func=Export()
-st.header("Export")
-export_func.describe_functionality()
+from functionalities import MANUDB,Export,Predict,Visualize,Compare
 
 
-#connect to DB and initialize cursor
-connection=sqlite3.connect('MANUDB.db')
-cursor=connection.cursor()
-
-
-#get the organism names by querying the DB
-
-organism_name=st.selectbox(
-    label='Please select an organism',
-    placeholder='Please select an organism',
-    options=numt_orgnames,
-    index=None,
-    key='export_organism_selection'
-)
-
-
-def convert_df(df):
-    return df.to_csv(index=False).encode('utf-8')
-
-if organism_name!=None:
-    with open('queries.json')as json_file:
-        queries=json.load(json_file)
-
-    query=st.selectbox(
-        label='Please select table(s)',
-        placeholder='Please select table(s)',
-        index=None,
-        options=queries.keys(),
-        key='table_selection'
-    )
-    if query!=None:
-        if query not in ["Sequence (genomic)","Sequence (mitochondrial)"]:
-            csv = convert_df(pd.read_sql_query(
-                queries[query].format(organism_name=organism_name.lower()),
-                connection
-            ))
-        else:
-            if query=="Sequence (genomic)":
-                df=pd.read_csv("genomic_sequences.csv",index_col="id")
-                df=df[df.index.str.contains(organism_name)]
-                df['id']=df.index
-                csv=convert_df(df)
-            elif query=="Sequence (mitochondrial)":
-                df=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
-                df=df[df.index.str.contains(organism_name)]
-                df['id']=df.index
-                csv=convert_df(df)
-
-        st.download_button(
-            f"Download {organism_name.lower().replace(' ','_')}_numts.csv",
-            csv,
-            f"{organism_name.lower().replace(' ','_')}_numts.csv",
-            "text/csv",
-            key='download-DBpart'
-        )
-#########################################################################Predict function
-st.divider()
-st.header("Predict")
-predict_func=Predict()
-predict_func.describe_functionality()
-
-trained_clf=joblib.load('optimized_model.pkl')
-best_features=pd.read_csv('best_features.csv',index_col=0)['0'].tolist()
-
-
-k=3
-bases=list('ACGT')
-kmers=[''.join(p) for p in product(bases, repeat=k)]
-
-
-st.html('''<style>hr {border-color: green;}</style>''')
-
-
-if 'text_area_content' not in st.session_state:
-    st.session_state.text_area_content=''
-
-
-examples='''>Example_Sequence.1\nAATGCTATTAGGGTCTGAGAGACTCTGCGAGTATAGCGGTTAGCGGCTATAGCGATCGATCAGCTACGATCTACGACTATCCA\n>Example_Sequence.2\nATGGTTTTTTTTGGGGTTACGTACGTNNNNNATATCGCGGCTACGGCTCGATCGGTTGCTACG'''
-
-
-def populate_example():
-    st.session_state.text_area_content=examples
-
-
-def clear():
-    st.session_state.text_area_content=''
-    if 'prediction' in st.session_state:
-    	del st.session_state['prediction']
-
-
-def convert_df(df):
-    return df.to_csv(index=False).encode('utf-8')
-
-
-def predict():
-    if st.session_state.text_area_content!='':
-        items=st.session_state.text_area_content.split('\n')
-        headers,sequences=[],[]
-        items=pd.Series(items)
-        headers=items[items.str.startswith('>')].str[1:]
-        sequences=items[~items.str.startswith('>')].str.upper()
-        sequences=sequences[sequences!='']
-        kmer_counts=[]
-        for sequence in sequences:
-            kmer_per_seq=[]
-            for kmer in kmers:
-                kmer_per_seq.append(sequence.count(kmer))
-            kmer_counts.append(kmer_per_seq)
-        df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
-        df=df[best_features]
-        X=(df-np.mean(df))/np.std(df)
-        prediction=pd.DataFrame()
-        prediction['header']=headers
-        prediction['label']=trained_clf.predict(X.values)
-        prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
-        prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
-        if 'prediction' not in st.session_state:
-            st.session_state['prediction']=prediction
-    else:
-        st.write('No sequence found to predict. Please paste your sequence(s) or use the example to get help!')
-        return None
-
-
-text_area=st.text_area(
-    label='Please paste your sequence(s) here',
-    height=150,
-    value=st.session_state.text_area_content,
-    key='text_area'
-)
-st.session_state.text_area_content=text_area
-left_column, middle_column, right_column = st.columns(3)
-example=left_column.button('Example',on_click=populate_example)
-clear=middle_column.button('Clear',on_click=clear)
-predict=right_column.button('Predict',on_click=predict)
-if 'prediction' in st.session_state:
-	csv = convert_df(st.session_state['prediction'])
-	st.download_button(f"Download MANUD_prediction.csv",csv,f"MANUD_prediction.csv","text/csv",key='download-prediction')
-	del st.session_state['prediction']
         
 #########################################################################Visualize function
 st.divider()
 st.header("Visualize")
+st.subheader("Single species usecase")
 visualize_func=Visualize()
 visualize_func.describe_functionality()
-st.image(
-     image='sample_chords.png',
-     caption="""
-        Figure 1. - Chord diagrams of the visualize functionality using NUMTs of the rat genome.\n\n
-        A.	Raw version with random colors. B. Optimized version with random colors. C. Raw version with 
-        proportional coloring. D. Optimized version with proportional coloring.
-     """
-)
 
 organism_name=st.selectbox(
     label='Please select an organism to visualize its NUMTs',
     placeholder='Please select an organism',
-    options=assembly_orgnames,
+    options=visualize_func.get_names(),
     index=None,
     key='visualize_organism_selection'
 )
 #st.set_option('deprecation.showPyplotGlobalUse', False)
 if organism_name!=None:
-    plot_type=st.selectbox(
-        label="Please select a plot type to visualize your selected organism's NUMTs",
-        placeholder='Please select a plot type',
-        options=['Raw (A)','Optimized (B)','Raw with proportional coloring (C)','Optimized with proportional coloring (D)'],
-        index=None,
-        key='plot_type'
-    )
-    scalers={'Raw (A)':1,'Optimized (B)':1_000_000,'Raw with proportional coloring (C)':1,'Optimized with proportional coloring (D)':1_000_000}
-    coloring={'Raw (A)':False,'Optimized (B)':False,'Raw with proportional coloring (C)':True,'Optimized with proportional coloring (D)':True}
-    if plot_type!=None:
-        try:
-            numts,assembly=visualize_func.get_dfs(organism_name=organism_name.replace(' ','_'))
-            sectors=visualize_func.get_sectors(assembly=assembly,scaler=scalers[plot_type])
-            links=visualize_func.get_links(numts=numts,assembly=assembly,scaler=scalers[plot_type])
-            fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,proportional_coloring=coloring[plot_type])
-            st.pyplot(fig=fig)
-            plot_format=st.selectbox(
-                label='Please select a format that you wish to download',
-                placeholder='Please select a format',
-                options=['png','svg'],
-                index=None,
-                key='plot_format'
-            )
-            if plot_format!=None:
-                mimes={'png':'image/png','svg':'image/svg+xml'}
-                img=io.BytesIO()
-                plt.savefig(img,format=plot_format,dpi=800)
-                download_fig=st.download_button(
-                    label='Download figure',
-                    data=img,
-                    file_name=f'MANUDB_{organism_name}_NUMTs.{plot_format}',
-                    mime=mimes[plot_format]
-                )
-        except Exception as e:
-            st.error(body='Something went wrong; please contact the maintainers at biro[dot]balint[at]uni-mate[dot]hu!')
+    numts,assembly=visualize_func.get_dfs(organism_name=organism_name)
+    sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
+    links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)
+    size_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,))
+    size_heatmap.index=sectors.index
+    count_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,True,))
+    count_heatmap.index=sectors.index
+    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap)
+    st.pyplot(fig=fig)
+    st.write(sectors["MT"])
+    st.dataframe(numts)
+

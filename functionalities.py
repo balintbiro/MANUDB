@@ -25,14 +25,18 @@
 ##################################################################################################################
 
 import json
+import joblib
 import sqlite3
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import streamlit as st
 from pycirclize import Circos
+from itertools import product
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
+from sklearn.metrics import pairwise_distances
 
 class MANUDB:
     """
@@ -102,10 +106,17 @@ class MANUDB:
         )
     
 class Export:
-    def __init__(self):
+    """
+    Class for exporting part(s) of MANUDB based on your preferred species of interest.
+    """
+    def __init__(self,connection:sqlite3.Connection):
         self.name='Export'
+        self.connection=connection
 
     def describe_functionality(self):
+        """
+        Describe the usage of this method.
+        """
         return st.markdown(
             '''<div style="text-align: justify;">
             This functionality makes it possible to export the selection of NUMTs based on 
@@ -119,6 +130,56 @@ class Export:
             </div>''',
             unsafe_allow_html=True
         )
+
+    def get_names(self)->np.array:
+        """
+        List the names that can be used to query the DB with this method.
+        """
+        names=(
+                pd
+                .read_sql_query("SELECT id FROM location",con=self.connection)
+                ["id"]
+                .str.split("_")
+                .str[:2]
+                .str.join("_")
+                .drop_duplicates()
+                .sort_values()
+                .values
+            )
+        return names
+
+    def get_downloadable(self,organism_name:str,queries:dict,query=None)->None:
+        """
+        Query SQL and load the part into a df which can be downloaded into a csv file.
+        """
+        def convert_df(df):
+            return df.to_csv(index=False).encode('utf-8')
+        if query!=None:
+            if (query not in ["Sequence (genomic)","Sequence (mitochondrial)"]):
+                csv = convert_df(pd.read_sql_query(
+                    queries[query].format(organism_name=organism_name.lower()),
+                    self.connection
+                ))
+            else:
+                if query=="Sequence (genomic)":
+                    df=pd.read_csv("genomic_sequences.csv",index_col="id")
+                    df=df[df.index.str.contains(organism_name)]
+                    df['id']=df.index
+                    csv=convert_df(df)
+                elif query=="Sequence (mitochondrial)":
+                    df=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
+                    df=df[df.index.str.contains(organism_name)]
+                    df['id']=df.index
+                    csv=convert_df(df)
+            if csv:
+                st.download_button(
+                    f"Download {organism_name.lower().replace(' ','_')}_numts.csv",
+                    csv,
+                    f"{organism_name.lower().replace(' ','_')}_numts.csv",
+                    "text/csv",
+                    key='download-DBpart'
+                )
+
     
 class Predict:
     """
@@ -127,6 +188,8 @@ class Predict:
     """
     def __init__(self):
         self.name='Predict'
+        self.trained_clf=joblib.load('optimized_model.pkl')
+        self.best_features=pd.read_csv('best_features.csv',index_col=0)['0'].tolist()
 
     def describe_functionality(self):
         return st.markdown(
@@ -146,27 +209,36 @@ class Predict:
         )
     
     def predict(self):
-        items=st.session_state.text_area_content.split('\n')
-        headers,sequences=[],[]
-        items=pd.Series(items)
-        headers=items[items.str.startswith('>')].str[1:]
-        sequences=items[~items.str.startswith('>')].str.upper()
-        kmer_counts=[]
-        for sequence in sequences:
-            kmer_per_seq=[]
-            for kmer in kmers:
-                kmer_per_seq.append(sequence.count(kmer))
-            kmer_counts.append(kmer_per_seq)
-        df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
-        df=df[best_features]
-        X=(df-np.mean(df))/np.std(df)
-        prediction=pd.DataFrame()
-        prediction['header']=headers
-        prediction['label']=trained_clf.predict(X.values)
-        prediction['prob-NUMT']=trained_clf.predict_proba(X.values)[:,1]
-        prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
-        if 'prediction' not in st.session_state:
-            st.session_state['prediction']=prediction
+        """
+        Method for predict whether the provided sequence(s) is(are) NUMT(s).
+        """
+        k=3
+        bases=list('ACGT')
+        kmers=[''.join(p) for p in product(bases, repeat=k)]
+        if st.session_state["sequence"]!="":
+            items=st.session_state["sequence"].split('\n')
+            headers,sequences=[],[]
+            for index,item in enumerate(items):
+                if ">" in item:
+                    headers.append(item[1:])
+                    sequences.append(items[index+1])
+            kmer_counts=[]
+            for sequence in sequences:
+                kmer_per_seq=[]
+                for kmer in kmers:
+                    kmer_per_seq.append(sequence.count(kmer))
+                kmer_counts.append(kmer_per_seq)
+            df=pd.DataFrame(data=kmer_counts,index=headers,columns=kmers)
+            df=df[self.best_features]
+            X=(df-np.mean(df))/np.std(df)
+            prediction=pd.DataFrame()
+            prediction['header']=headers
+            prediction['label']=self.trained_clf.predict(X.values)
+            prediction['prob-NUMT']=self.trained_clf.predict_proba(X.values)[:,1]
+            prediction['label']=prediction['label'].replace([1,0],['NUMT','non-NUMT'])
+            st.session_state["prediction"]=prediction
+        else:
+            pass
     
 class Visualize:
     """
@@ -198,6 +270,11 @@ class Visualize:
             </div>''',
             unsafe_allow_html=True
         )
+
+    def get_names(self):
+        with open("assemblies.json")as infile:
+            assemblies=json.load(infile)
+        return pd.Series(assemblies.keys()).sort_values()
     
     def get_dfs(self,organism_name)->tuple:
         with open('queries.json')as json_file:
@@ -227,24 +304,23 @@ class Visualize:
         numts=numts.dropna(subset=['molecule'])
         return (numts,assembly)
     
-    def get_sectors(self,assembly:pd.DataFrame,scaler=1)->dict:
+    def get_sectors(self,assembly:pd.DataFrame)->dict:
         assembly['length']=assembly['length'].astype(int)
-        sectors=assembly.groupby(by='molecule')['length'].sum().reset_index().apply(
-            lambda row: int(int(row['length'])/scaler) if row['molecule']!='MT' else int(row['length']),
-            axis=1
-        )
-        sectors.index=assembly.groupby(by='molecule')['length'].sum().index
+        sectors=assembly.groupby(by='molecule')['length'].sum()
         sectors=sectors[sectors>0]
-        return sectors.to_dict()
+        MtScaler=int(sectors[sectors.index!="MT"].sum()/sectors["MT"])
+        sectors["MT"]=sectors[sectors.index!="MT"].sum()
+        sectors=pd.concat([sectors[sectors.index!="MT"],sectors[sectors.index=="MT"]])
+        return (sectors,MtScaler)
     
-    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame,scaler=1)->list:
+    def get_links(self,numts:pd.DataFrame,assembly:pd.DataFrame,MtScaler:int)->list:
         mt_size=assembly[assembly['molecule']=='MT']['length'].values[0]
         fil=(numts['mitochondrial_start']+numts['mitochondrial_length'])<mt_size
         numts=numts[fil]
         links=numts[numts['molecule']!='scaffold'].apply(
             lambda row: (
-                ('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
-                (row['molecule'],int(row['genomic_start']/scaler),int((row['genomic_start']+row['genomic_length'])/scaler))
+                ('MT',int(row['mitochondrial_start']*MtScaler),int(row['mitochondrial_start']*MtScaler+row['mitochondrial_length']*MtScaler)),
+                (row['molecule'],int(row['genomic_start']),int((row['genomic_start']+row['genomic_length'])))
             ),axis=1
         ).tolist()
         def get_scf_links(row):
@@ -256,8 +332,8 @@ class Visualize:
                 mod_ids=mod_ids[mod_ids!=row['genomic_id']].tolist()
                 summation=gid_dict[mod_ids].sum()
             links.append(
-                    (('MT',int(row['mitochondrial_start']),int(row['mitochondrial_start']+row['mitochondrial_length'])),
-                    ('scaffold',(summation+int(row['genomic_start']))/scaler,(summation+int(row['genomic_start'])+int(row['genomic_length']))/scaler))
+                    (('MT',int(row['mitochondrial_start']*MtScaler),int(row['mitochondrial_start']*MtScaler+row['mitochondrial_length']*MtScaler)),
+                    ('scaffold',(summation+int(row['genomic_start'])),(summation+int(row['genomic_start'])+int(row['genomic_length']))))
                 )
         id_container=[]
         scf_df=numts[numts['molecule']=='scaffold']
@@ -266,41 +342,194 @@ class Visualize:
         scf_df.apply(get_scf_links,axis=1)
         return links
 
-    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,proportional_coloring=False)->None:
+    def heatmap(self,gid:str,numts:pd.DataFrame,sectors:dict,MtScaler:int,count=False)->list:
+        if gid!="MT":
+            nbins,tracker,container=20,0,[]
+            heatmap_range=np.linspace(start=0,stop=sectors[gid],num=nbins,dtype=int)
+            subdf=numts[numts["molecule"]==gid]
+            subdf["genomic_end"]=subdf["genomic_start"]+subdf["genomic_length"]
+            if subdf.shape[0]!=0:
+                for limit in heatmap_range:
+                    selected_df=subdf[subdf["genomic_start"]<limit]
+                    numt_size=selected_df["genomic_end"]-selected_df["genomic_start"]
+                    if count:
+                        container.append((selected_df.shape[0])-tracker)
+                        tracker=subdf[subdf["genomic_start"]<limit].shape[0]
+                    else:
+                        container.append(numt_size.sum()-tracker)
+                        tracker=numt_size.sum()
+            else:
+                container=nbins*[0]
+            return container
+        else:
+            nbins,tracker,container=100,0,[]
+            heatmap_range=np.linspace(start=0,stop=sectors[gid],num=nbins,dtype=int)/MtScaler
+            numts["mitochondrial_end"]=numts["mitochondrial_start"]+numts["mitochondrial_length"]
+            for limit in heatmap_range:
+                selected_df=numts[numts["mitochondrial_start"]<limit]
+                numt_size=selected_df["mitochondrial_end"]-selected_df["mitochondrial_start"]
+                if count:
+                    container.append((selected_df.shape[0])-tracker)
+                    tracker=numts[numts["mitochondrial_start"]<limit].shape[0]
+                else:
+                    container.append(numt_size.sum()-tracker)
+                    tracker=numt_size.sum()
+            return container
+
+
+    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap=pd.Series)->None:
         fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
-        circos=Circos(sectors,space=5)
-        fontsize=12
+        circos=Circos(sectors,space=2)
+        fontsize=8
         for sector in circos.sectors:
             track=sector.add_track((95,100))
-            if proportional_coloring==False:
-                np.random.seed(0)
-                colors=[
-                    '#'+''.join(list(np.random.choice(a=list('123456789ABCDEF'), size=6))) for i in range(len(sectors.keys()))
-                ]
-                name2color=dict(zip(sectors.keys(), colors))
-                if sector.name=='MT':
-                    track.axis(fc='grey')
-                else:
-                    track.axis(fc=name2color[sector.name])
-            else:
-                track.axis(fc='grey')
+            track.axis(fc='grey')
             if sector.name=='scaffold':
                 track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
             elif len(str(sector.name))==2:
                 track.text(sector.name,color='black',size=fontsize,r=110,orientation='vertical')
             else:
                 track.text(sector.name,color='black',size=fontsize,r=110)
-        if proportional_coloring==True:
-            norm=Normalize(vmin=min(numts['mitochondrial_length']),vmax=max(numts['mitochondrial_length']))
-            cmap=plt.get_cmap('Reds')
-            colors=[cmap(norm(value)) for value in numts['mitochondrial_length'].tolist()]
-            name2color=dict(zip(sectors.keys(), colors))
-            sm=ScalarMappable(cmap=cmap,norm=norm)
-            sm.set_array([])
-            cbar=plt.colorbar(sm,ax=ax)
-            cbar.set_label('NUMT size (bp)',fontsize=fontsize)
+            hms_track=sector.add_track((89,94))
+            hms_track.axis(fc="none")
+            hms_track.heatmap(size_heatmap[sector.name],cmap="Greens")
+
+            hms_track=sector.add_track((83,88))
+            hms_track.axis(fc="none")
+            hms_track.heatmap(count_heatmap[sector.name],cmap="Reds")
         for link in links:
-            circos.link(link[0],link[1],color=name2color[link[1][0]])
+            circos.link(link[0],link[1],color="lightblue")
         circos.plotfig(ax=ax)
-        plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=-0.1)
+        plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
         return fig
+
+
+class Compare:
+    def __init__(self,connection:sqlite3.Connection):
+        self.name='Compare'
+        self.connection=connection
+
+    def describe_functionality(self)->st.markdown:
+        return st.markdown(
+            '''<div style="text-align: justify;">
+            MANUDB makes it possible to visualize and comapre distinct species' NUMTs.
+            To perform comparative analysis please select your species of interest.
+            </div>''',
+            unsafe_allow_html=True
+        )
+
+    def get_names(self)->np.array:
+        return (
+                pd
+                .read_csv("MtSizes.csv")["orgname"]
+                .sort_values()
+                .values
+            )
+
+    def get_compdf(self,MtSizes:pd.Series,orgs:list)->tuple:
+        Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
+        Compdf["SpeciesFull"]=Compdf["id"].str.split("_").str[:2].str.join("_")
+        Compdf=Compdf.groupby(by="SpeciesFull").apply(
+            lambda subdf:
+            subdf[(subdf["mitochondrial_start"]+subdf["mitochondrial_length"])<MtSizes[subdf["SpeciesFull"].unique()[0]]]
+        ).reset_index(drop=True)
+        Compdf["SpeciesShort"]=Compdf["SpeciesFull"].str[:2]+" "+Compdf["SpeciesFull"].str.split("_").str[1].str[:2]
+        Compdf["Relative NUMT size"]=Compdf["genomic_length"]/Compdf["genomic_size"]
+        Compdf["genomic_size"]=Compdf["genomic_size"]/1000_000
+        Compdf.rename(columns={"genomic_length":"NUMT size (bp)"},inplace=True)
+        return Compdf
+
+    def get_regdf(self,Compdf:pd.DataFrame,orgs:list)->tuple:
+        Regdf=(
+            Compdf
+            .groupby(by=["SpeciesFull","SpeciesShort","genomic_id","genomic_size"])["NUMT size (bp)"]
+            .sum()
+            .reset_index()
+            )
+        return (Regdf[Regdf["SpeciesFull"]==orgs[0]],Regdf[Regdf["SpeciesFull"]==orgs[1]])
+
+    def get_seq_identity(self,orgs:list)->pd.DataFrame:
+        Gseqs=pd.read_csv("genomic_sequences.csv")
+        Mtseqs=pd.read_csv("mitochondrial_sequences.csv")
+        seqs=Gseqs.join(Mtseqs.set_index("id"),on="id")
+        seqs=seqs[
+            (seqs["id"].str.contains(orgs[0]))
+            |(seqs["id"].str.contains(orgs[1]))
+        ]
+        seqs["genomic_sequence"]=seqs["genomic_sequence"].str.upper()
+        seqs["mitochondrial_sequence"]=seqs["mitochondrial_sequence"].str.upper()
+        def identity(row)->float:
+            Gseq=list(row["genomic_sequence"])
+            Mtseq=list(row["mitochondrial_sequence"])
+            sequences=pd.DataFrame(columns=["G","Mt"])
+            sequences["G"]=Gseq
+            sequences["Mt"]=Mtseq
+            return (sequences["G"]==sequences["Mt"]).astype(int).sum()/sequences.shape[0]
+        seqs["Sequence identity"]=seqs.apply(identity,axis=1)
+        SpeciesFull=seqs["id"].str.split("_").str[:2].str.join("_")
+        seqs["SpeciesShort"]=SpeciesFull.str[:2]+" "+SpeciesFull.str.split("_").str[1].str[:2]
+        return seqs
+
+    def boxplot(self,Compdf:pd.DataFrame,orgs:list,y_name:str,ax)->None:
+        sns.boxplot(
+                data=Compdf,x="SpeciesShort",y=y_name,
+                ax=ax,showfliers=False,hue="SpeciesShort",
+                palette=["lightblue","orange"],
+                width=.4,order=Compdf["SpeciesShort"].unique()
+            )
+        ax.set(ylabel=y_name,xlabel="Species")
+
+    def regplot(self,Regdf:pd.DataFrame,color:str,ax)->None:
+        sns.regplot(
+                data=Regdf,x="genomic_size",y="NUMT size (bp)",
+                ax=ax,color=color
+            )
+        ax.set(xlabel="Size of genome part (Mb)",ylabel="Cumulative NUMT size (bp)")
+
+    def histplot(self,Compdf:pd.DataFrame,org:str,color:str,MtSizes:pd.Series,ax)->None:
+        sns.histplot(
+            np.concatenate(
+                Compdf[Compdf["SpeciesFull"]==org].apply(
+                    lambda row:
+                    np.arange(start=row["mitochondrial_start"],stop=(row["mitochondrial_start"]+row["mitochondrial_length"]),step=10,dtype=int),axis=1
+                ).values
+            ),
+            bins=200,element="step",color=color,ax=ax
+        )
+        ax.set_xticks(ticks=np.arange(start=0,stop=MtSizes[org],step=2000))
+        ax.set_xticklabels(np.arange(start=0,stop=MtSizes[org],step=2000),rotation=45)
+        ax.set_xlabel("Mitochondrial nucleotides")
+
+    def heatmap(self,orgs:list,Compdf:pd.DataFrame,ax)->None:
+        k=3
+        nucleotides=list('ACGT')
+        kmers=[''.join(nucleotide) for nucleotide in product(nucleotides, repeat=k)]
+        sequences=pd.read_csv("genomic_sequences.csv")
+        sequences=Compdf.join(sequences.set_index("id"),on="id")[["id","genomic_sequence"]]
+        sequences=sequences[
+            (sequences["id"].str.contains(orgs[0]))
+            |(sequences["id"].str.contains(orgs[1]))
+        ]
+        colors=sequences["id"].str.contains(orgs[0]).replace([True,False],["lightblue","orange"])
+        sequences["genomic_sequence"]=sequences["genomic_sequence"].str.upper().str.replace("-","")
+        def getKmers(sequence):
+            kmerCounts=[]
+            for kmer in kmers:
+                kmerCounts.append(sequence.count(kmer))
+            return (pd.Series(kmerCounts)/len(sequence)).values
+        kmer_counts=sequences["genomic_sequence"].apply(getKmers).tolist()
+        distances=pairwise_distances(kmer_counts)
+        sns.heatmap(
+                1-distances,
+                cmap="coolwarm",
+                ax=ax,
+                cbar_kws={"orientation": "horizontal","shrink":.5,"label":"K-mer based similarity"}
+            )
+        ax.set_xticks(ticks=[],labels=[])
+        ax.set_yticks(ticks=[],labels=[])
+        for i, color in enumerate(colors):
+            ax.add_patch(plt.Rectangle(xy=(-0.03, i), width=0.025, height=1, color=color, lw=0,
+                                       transform=ax.get_yaxis_transform(), clip_on=False))
+            ax.add_patch(plt.Rectangle(xy=(i, 1.03), width=1, height=0.05, color=color, lw=0,
+                                       transform=ax.get_xaxis_transform(), clip_on=False))
+
