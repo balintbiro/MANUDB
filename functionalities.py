@@ -27,6 +27,7 @@
 import json
 import joblib
 import sqlite3
+import matplotlib
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -34,8 +35,6 @@ import streamlit as st
 from pycirclize import Circos
 from itertools import product
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
-from matplotlib.cm import ScalarMappable
 from sklearn.metrics import pairwise_distances
 
 class MANUDB:
@@ -286,6 +285,10 @@ class Visualize:
             queries['Location'].format(organism_name=organism_name.replace(' ','_')),
             connection
         )
+        alignment_scores=pd.read_sql_query(
+            queries['Statistic'].format(organism_name=organism_name.replace(' ','_')),
+            connection
+        )["alignment_score"]
         with open('assemblies.json')as infile:
             assemblies=json.load(infile)
         assembly=assemblies[organism_name.replace(' ','_')]
@@ -302,7 +305,7 @@ class Visualize:
         mapper=pd.Series(data=assembly['molecule'].values,index=assembly['refseq'].values)
         numts['molecule']=numts['genomic_id'].apply(lambda gid: mapper.get(gid,np.nan)).values#mapper[numts['genomic_id'].values].values
         numts=numts.dropna(subset=['molecule'])
-        return (numts,assembly)
+        return (numts,assembly,alignment_scores)
     
     def get_sectors(self,assembly:pd.DataFrame)->dict:
         assembly['length']=assembly['length'].astype(int)
@@ -377,7 +380,7 @@ class Visualize:
             return container
 
 
-    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap=pd.Series)->None:
+    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap:pd.Series,alignment_scores:pd.Series)->None:
         fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
         circos=Circos(sectors,space=2)
         fontsize=8
@@ -397,8 +400,11 @@ class Visualize:
             hms_track=sector.add_track((83,88))
             hms_track.axis(fc="none")
             hms_track.heatmap(count_heatmap[sector.name],cmap="Reds")
-        for link in links:
-            circos.link(link[0],link[1],color="lightblue")
+        cmap=plt.cm.coolwarm
+        norm=matplotlib.colors.Normalize(vmin=min(alignment_scores),vmax=max(alignment_scores))
+        sm=matplotlib.cm.ScalarMappable(cmap="coolwarm",norm=norm)
+        for index,link in enumerate(links):
+            circos.link(link[0],link[1],color=cmap(norm(alignment_scores[index])))
         circos.plotfig(ax=ax)
         plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
         return fig
