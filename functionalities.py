@@ -400,7 +400,7 @@ class Visualize:
         fontsize=8
         for sector in circos.sectors:
             track=sector.add_track((93,100))
-            track.axis(fc='black')
+            track.axis(fc='#008080')
             if sector.name=='scaffold':
                 track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
             elif len(str(sector.name))==2:
@@ -420,7 +420,7 @@ class Visualize:
         for index,link in enumerate(links):
             circos.link(link[0],link[1],color=cmap(norm(alignment_scores[index])))
         circos.plotfig(ax=ax)
-        plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
+        plt.title(f"",x=.5,y=1.1)
         self.add_cbar(values=alignment_scores,title="Alignment score",cbar_pos=(-.1,.7,0.015,0.1),cmap_name="coolwarm",ax=ax)
         self.add_cbar(values=np.concatenate(size_heatmap.values),title="NUMT size (bp)",cbar_pos=(-.1,.5,0.015,0.1),cmap_name="Greens",ax=ax)
         self.add_cbar(values=np.concatenate(count_heatmap.values),title="NUMT count",cbar_pos=(-.1,.3,0.015,0.1),cmap_name="Greys",ax=ax)
