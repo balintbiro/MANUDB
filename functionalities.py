@@ -279,7 +279,7 @@ class Visualize:
         with open('queries.json')as json_file:
             queries=json.load(json_file)
         #connect to DB and initialize cursor
-        connection=sqlite3.connect('MANUDB.db')
+        connection=sqlite3.connect('MANUDBrev.db')
         cursor=connection.cursor()
         numts=pd.read_sql_query(
             queries['Location'].format(organism_name=organism_name.replace(' ','_')),
@@ -289,6 +289,7 @@ class Visualize:
             queries['Statistic'].format(organism_name=organism_name.replace(' ','_')),
             connection
         )["alignment_score"]
+        alignment_scores=alignment_scores/numts["genomic_length"]
         with open('assemblies.json')as infile:
             assemblies=json.load(infile)
         assembly=assemblies[organism_name.replace(' ','_')]
@@ -305,6 +306,7 @@ class Visualize:
         mapper=pd.Series(data=assembly['molecule'].values,index=assembly['refseq'].values)
         numts['molecule']=numts['genomic_id'].apply(lambda gid: mapper.get(gid,np.nan)).values#mapper[numts['genomic_id'].values].values
         numts=numts.dropna(subset=['molecule'])
+        connection.close()
         return (numts,assembly,alignment_scores)
     
     def get_sectors(self,assembly:pd.DataFrame)->dict:
@@ -379,34 +381,49 @@ class Visualize:
                     tracker=numt_size.sum()
             return container
 
+    def add_cbar(self,values:list,title:str,cbar_pos:tuple,cmap_name,ax)->None:
+        norm=plt.Normalize(vmin=min(values),vmax=max(values))
+        cmap=plt.get_cmap(cmap_name)
+        colors=[cmap(norm(value)) for value in values]
+        sm=plt.cm.ScalarMappable(cmap=cmap,norm=norm)
+        sm.set_array([])
+        cbar_ax=plt.axes(cbar_pos)
+        cbar=plt.colorbar(sm,cax=cbar_ax)
+        cbar.ax.set_title(title,fontsize=8)
+        cbar.ax.yaxis.label.set_verticalalignment("bottom")
+        cbar.ax.yaxis.label.set_position((0.5,1.2))
+        cbar.ax.yaxis.set_tick_params(labelsize=6)
 
     def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap:pd.Series,alignment_scores:pd.Series)->None:
         fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
         circos=Circos(sectors,space=2)
         fontsize=8
         for sector in circos.sectors:
-            track=sector.add_track((95,100))
-            track.axis(fc='grey')
+            track=sector.add_track((93,100))
+            track.axis(fc='black')
             if sector.name=='scaffold':
                 track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
             elif len(str(sector.name))==2:
                 track.text(sector.name,color='black',size=fontsize,r=110,orientation='vertical')
             else:
                 track.text(sector.name,color='black',size=fontsize,r=110)
-            hms_track=sector.add_track((89,94))
+            hms_track=sector.add_track((85,92))
             hms_track.axis(fc="none")
             hms_track.heatmap(size_heatmap[sector.name],cmap="Greens")
 
-            hms_track=sector.add_track((83,88))
+            hms_track=sector.add_track((77,84))
             hms_track.axis(fc="none")
-            hms_track.heatmap(count_heatmap[sector.name],cmap="Reds")
+            hms_track.heatmap(count_heatmap[sector.name],cmap="Greys")
         cmap=plt.cm.coolwarm
         norm=matplotlib.colors.Normalize(vmin=min(alignment_scores),vmax=max(alignment_scores))
-        sm=matplotlib.cm.ScalarMappable(cmap="coolwarm",norm=norm)
+        sm=matplotlib.cm.ScalarMappable(cmap="seismic",norm=norm)
         for index,link in enumerate(links):
             circos.link(link[0],link[1],color=cmap(norm(alignment_scores[index])))
         circos.plotfig(ax=ax)
         plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
+        self.add_cbar(values=alignment_scores,title="Alignment score",cbar_pos=(-.1,.7,0.015,0.1),cmap_name="coolwarm",ax=ax)
+        self.add_cbar(values=np.concatenate(size_heatmap.values),title="NUMT size (bp)",cbar_pos=(-.1,.5,0.015,0.1),cmap_name="Greens",ax=ax)
+        self.add_cbar(values=np.concatenate(count_heatmap.values),title="NUMT count",cbar_pos=(-.1,.3,0.015,0.1),cmap_name="Greys",ax=ax)
         return fig
 
 
