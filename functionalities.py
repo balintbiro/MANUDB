@@ -280,7 +280,7 @@ class Visualize:
         with open('queries.json')as json_file:
             queries=json.load(json_file)
         #connect to DB and initialize cursor
-        connection=sqlite3.connect('MANUDB.db')
+        connection=sqlite3.connect('MANUDBrev.db')
         cursor=connection.cursor()
         numts=pd.read_sql_query(
             queries['Location'].format(organism_name=organism_name.replace(' ','_')),
