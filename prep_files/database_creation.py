@@ -14,10 +14,45 @@ connection=sqlite3.connect('../data/MANUDB.db')
 cursor=connection.cursor()
 
 #add tables
-cursor.execute("CREATE TABLE statistic(id, eg2_value, e_value)")
-cursor.execute("CREATE TABLE location(id, genomic_id, genomic_size, genomic_start, mitochondrial_start, genomic_length, mitochondrial_length, genomic_strand, mitochondrial_strand)")
-cursor.execute("CREATE TABLE genes(gene,mt_gene)")
-cursor.execute("CREATE TABLE taxonomy(organism_name, taxonomy_order, family, genus, assembly_version)")
+
+cursor.execute(
+        """CREATE TABLE statistic(
+            id VARCHAR,
+            eg2_value FLOAT,
+            e_value FLOAT,
+            seq_identity FLOAT,
+            alignment_score INT
+        )"""
+    )
+cursor.execute(
+        """CREATE TABLE location(
+            id VARCHAR,
+            genomic_id VARCHAR,
+            genomic_size INT,
+            genomic_start INT,
+            mitochondrial_start INT,
+            genomic_length INT,
+            mitochondrial_length INT,
+            genomic_strand CHAR(1),
+            mitochondrial_strand CHAR(1)
+        )"""
+    )
+cursor.execute(
+        """CREATE TABLE genes(
+            id VARCHAR,
+            gene VARCHAR,
+            mt_gene VARCHAR
+        )"""
+    )
+cursor.execute(
+        """CREATE TABLE taxonomy(
+            organism_name VARCHAR,
+            taxonomy_order VARCHAR,
+            family VARCHAR,
+            genus VARCHAR,
+            assembly_version VARCHAR
+        )"""
+    )
 
 #sanity check->should list all the table names
 result=cursor.execute("SELECT name FROM sqlite_master")
@@ -33,8 +68,8 @@ def fillDB(cols_list:list,query:str, input_df:pd.DataFrame)->None:
 
 #fillDB with elements
 fillDB(
-    cols_list=['id','eg2_value','e_value'],
-    query="INSERT INTO statistic VALUES(?, ?, ?)",
+    cols_list=['id','eg2_value','e_value','seq_identity','alignment_score'],
+    query="INSERT INTO statistic VALUES(?, ?, ?, ?, ?)",
     input_df=numts
 )
 fillDB(

@@ -74,7 +74,7 @@ with st.sidebar:
 
 #########################################################################Export function
 #connect to DB and initialize cursor
-connection=sqlite3.connect('MANUDB.db')
+connection=sqlite3.connect('MANUDBrev.db')
 
 st.divider()
 export_func=Export(connection=connection)
