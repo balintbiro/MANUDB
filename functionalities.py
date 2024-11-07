@@ -400,7 +400,7 @@ class Visualize:
         fontsize=8
         for sector in circos.sectors:
             track=sector.add_track((93,100))
-            track.axis(fc='black')
+            track.axis(fc='teal')
             if sector.name=='scaffold':
                 track.text(sector.name,color='black',size=fontsize,r=120,orientation='vertical')
             elif len(str(sector.name))==2:
