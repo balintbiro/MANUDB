@@ -127,6 +127,23 @@ if organism_name!=None:
     count_heatmap.index=sectors.index
     fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap,alignment_scores=alignment_scores)
     st.pyplot(fig=fig)
+    plot_format=st.selectbox(
+        label='Please select a format that you wish to download',
+        placeholder='Please select a format',
+        options=['png','svg'],
+        index=None,
+        key='plot_format'
+    )
+    if plot_format!=None:
+        mimes={'png':'image/png','svg':'image/svg+xml'}
+        img=io.BytesIO()
+        plt.savefig(img,format=plot_format,dpi=800)
+        download_fig=st.download_button(
+            label='Download figure',
+            data=img,
+            file_name=f'MANUDB_{organism_name}_NUMTs.{plot_format}',
+            mime=mimes[plot_format]
+        )
 
 st.subheader("Comparative usecase")
 compare=Compare(connection=connection)
