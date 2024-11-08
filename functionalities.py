@@ -250,22 +250,19 @@ class Visualize:
     def describe_functionality(self):
         return st.markdown(
             '''<div style="text-align: justify;">
-            The visualize functionality makes it possible to visualize the genetic flow from the mitochondria to the
-            nuclear genome. MANUDB offers four types of 
-            <a href="https://en.wikipedia.org/wiki/Chord_diagram_(information_visualization)">chord diagrams</a> to 
-            display NUMTs of a particular genome. 
-            Unplaced and unlocalized scaffolds are plotted too in a merged form. We define raw version of visualization 
-            where all genomic parts are displayed with their corresponding sizes in bp. The genomic parts are color coded 
-            with randomly chosen colors (Figure 1./A). The same raw input can be visualized with proportional coloring 
-            with respect to NUMT sizes. In this case the genomic parts are colored uniformly (Figure 1./C). This raw 
-            version of visualization is more focused on the genomic parts of chromosomes and scaffolds rather than the 
-            mitochondrion. With the help of it one can visualize the flow into individual chromosomes and scaffolds from 
-            the mitochondrion. We define optimized version of visualization where all the genomic parts except the 
-            mitochondrion are displayed with their corresponding sizes in Mbp. While mitochondrion is displayed in bp. 
-            It is possible to color the optimized visualization version randomly or proportionally with respect to NUMT 
-            sizes (Figure 1. /B and Figure 1./D respectively). The optimized visualization is focusing on the mitochondrion. 
-            Contrary to the raw form of visualization this type is more appropriate if someone would like to visualize 
-            the source of the NUMTs within the mitochondrion.
+            The single species option offers the possibilityse chord diagrams to display NUMTs of species of interest 
+            using Circos plots. The visualization itself is performed by using the Python implementation of Circos. 
+            The output format of this functionality can be .png or .svg based on the user’s preference. This type of 
+            visualization proved to be intuitive and efficient when it comes to plot the genetic flow from the 
+            mitochondrion into the different parts of the nuclear genome. Unplaced and unlocalized scaffolds are plotted 
+            too in a merged form. We have decided to merge scaffolds together since for example, in the rat genome there 
+            are more than 150 unplaced and unlocalized scaffolds. It would highly decrease the user experience to 
+            visualize each and every one of them individually. In some previously published studies, to reduce computational 
+            bias scaffolds are merged or even omitted. Heatmap representation of the cumulative size and number of NUMTs 
+            of different chromosomal regions are displayed using green and grey scales respectively. 
+            Links representing NUMTs are colored based on their relative alignment score using blue to red continuous scale 
+            from lowest to highest. The alignment scoring is discussed in the Data collection and organization 
+            section of the MANUDB article. 
             </div>''',
             unsafe_allow_html=True
         )
@@ -449,6 +446,12 @@ class Compare:
                 .values
             )
 
+    def get_shortnames(self,orgs:list)->list:
+        return [
+            f"{orgs[0].split("_")[0][:2]} {orgs[0].split("_")[1][:2]}",
+            f"{orgs[1].split("_")[0][:2]} {orgs[1].split("_")[1][:2]}"
+        ]
+
     def get_compdf(self,MtSizes:pd.Series,orgs:list)->tuple:
         Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
         Compdf["SpeciesFull"]=Compdf["id"].str.split("_").str[:2].str.join("_")
@@ -497,8 +500,8 @@ class Compare:
         sns.boxplot(
                 data=Compdf,x="SpeciesShort",y=y_name,
                 ax=ax,showfliers=False,hue="SpeciesShort",
-                palette=["lightblue","orange"],
-                width=.4,order=Compdf["SpeciesShort"].unique()
+                palette={self.get_shortnames(orgs=orgs)[0]:"lightblue",self.get_shortnames(orgs=orgs)[1]:"orange"},
+                width=.4,order=self.get_shortnames(orgs=orgs)
             )
         ax.set(ylabel=y_name,xlabel="Species")
 
