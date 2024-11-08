@@ -432,8 +432,17 @@ class Compare:
     def describe_functionality(self)->st.markdown:
         return st.markdown(
             '''<div style="text-align: justify;">
-            MANUDB makes it possible to visualize and comapre distinct species' NUMTs.
-            To perform comparative analysis please select your species of interest.
+            The comparative use case allows users to make a comparison between two species’ NUMTs using different visualizations. 
+            This can be helpful if the users would like to place the NUMTs of their species of interests into the context of other 
+            genomes’ NUMTs. For this MANUDB displays the distributions of NUMT sizes of the selected species using boxplots. 
+            It also compares the sequence identities of the NUMTs and their corresponding mitochondrial regions with boxplots. 
+            In this case the sequence identity is given as a ratio and so it varies between 0 and 1. The regression plots display 
+            the relationship between the size of a given genomic part (chromosome or scaffold) and the cumulative size of its 
+            corresponding NUMTs. The sizes of the genomic parts are displayed in base pairs (bps). For the regression plots 
+            MANUDB uses linear regression with 95% confidence intervals (shaded areas on plots). The confidence intervals are 
+            bootstrapped using 1000 bootstrap iterations. The comparative use case of the visualization functionality provides 
+            plots for demonstrating the distribution of NUMTs along the linearized mitochondrial genome of the selected species. 
+            This type of visualization shed light on the coverage of different mitochondrial parts. 
             </div>''',
             unsafe_allow_html=True
         )
