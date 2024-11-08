@@ -448,8 +448,8 @@ class Compare:
 
     def get_shortnames(self,orgs:list)->list:
         return [
-            f"{orgs[0].split("_")[0][:2]} {orgs[0].split("_")[1][:2]}",
-            f"{orgs[1].split("_")[0][:2]} {orgs[1].split("_")[1][:2]}"
+            f"""{orgs[0].split("_")[0][:2]} {orgs[0].split("_")[1][:2]}""",
+            f"""{orgs[1].split("_")[0][:2]} {orgs[1].split("_")[1][:2]}"""
         ]
 
     def get_compdf(self,MtSizes:pd.Series,orgs:list)->tuple:
