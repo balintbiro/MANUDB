@@ -122,7 +122,7 @@ class Export:
             the selected organism name. 
             Just click on the dropdown above and check the available options. 
             Right now MANUDB supports <a href="https://en.wikipedia.org/wiki/Comma-separated_values">
-            .csv format</a> exports. During the export one can download 14 features 
+            .csv</a> format exports. During the export one can download 14 features 
             (e value, genomic identifier, genomic start position, mitochondrial start position, genomic length,
             mitochondrial length, genomic strand, mitochondrial strand, genomic size, genomic sequence, 
             mitochondrial sequence, genus name, family name and order name).
@@ -252,7 +252,7 @@ class Visualize:
             '''<div style="text-align: justify;">
             The single species option offers the possibilityse chord diagrams to display NUMTs of species of interest 
             using Circos plots. The visualization itself is performed by using the Python implementation of Circos. 
-            The output format of this functionality can be .png or .svg based on the user’s preference. This type of 
+            The output format of this functionality can be <a href="https://en.wikipedia.org/wiki/PNG">.png</a> or <a href="https://en.wikipedia.org/wiki/SVG">.svg</a> based on the user’s preference. This type of 
             visualization proved to be intuitive and efficient when it comes to plot the genetic flow from the 
             mitochondrion into the different parts of the nuclear genome. Unplaced and unlocalized scaffolds are plotted 
             too in a merged form. We have decided to merge scaffolds together since for example, in the rat genome there 
