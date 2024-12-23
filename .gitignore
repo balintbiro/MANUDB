@@ -19,3 +19,5 @@ __pycache__/.DS_Store
 .DS_Store
 SampleSingleSpeciesUseCase.png
 SampleComparative.png
+__pycache__/functionalities.cpython-312.pyc
+*.pyc
