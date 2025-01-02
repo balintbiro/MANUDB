@@ -454,12 +454,15 @@ class Compare:
         )
 
     def get_names(self)->np.array:
-        return (
+        names=(
                 pd
                 .read_csv("MtSizes.csv")["orgname"]
                 .sort_values()
-                .values
             )
+        name_conversion=pd.read_csv("name_conversion.txt")
+        overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+        correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+        return correct_names.values
 
     def get_shortnames(self,orgs:list)->list:
         return [

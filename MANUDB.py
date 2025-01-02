@@ -184,6 +184,18 @@ with col2:
     )
 MtSizes=pd.read_csv("MtSizes.csv",index_col=0)["mt_size"]
 if (org1!=None) and (org2!=None):
+    org1=(
+            org1
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
+    org2=(
+            org2
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
     orgs=[org1,org2]
     Compdf=compare.get_compdf(MtSizes=MtSizes,orgs=orgs)
     Identitydf=compare.get_seq_identity(orgs=orgs)
