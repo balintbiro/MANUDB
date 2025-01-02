@@ -23,4 +23,4 @@ def get_names()->np.array:
     correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
     return correct_names.values
 
-print(get_names())
+print(np.random.choice(get_names(),1)[0].split('(')[0].strip().replace(' ','_'))

@@ -90,6 +90,13 @@ organism_name=st.selectbox(
 )
 
 if organism_name!=None:
+    #modify the variable so it will be in the same form as the SQL uses it
+    organism_name=(
+            organism_name
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
     with open('queries.json')as json_file:
         queries=json.load(json_file)
 
