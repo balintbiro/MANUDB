@@ -272,7 +272,11 @@ class Visualize:
     def get_names(self):
         with open("assemblies.json")as infile:
             assemblies=json.load(infile)
-        return pd.Series(assemblies.keys()).sort_values()
+        names=pd.Series(assemblies.keys()).sort_values()
+        name_conversion=pd.read_csv("name_conversion.txt")
+        overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+        correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+        return correct_names.values
     
     def get_dfs(self,organism_name)->tuple:
         with open('queries.json')as json_file:

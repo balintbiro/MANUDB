@@ -125,6 +125,13 @@ organism_name=st.selectbox(
 )
 #st.set_option('deprecation.showPyplotGlobalUse', False)
 if organism_name!=None:
+    #modify the variable so it will be in the same form as the SQL uses it
+    organism_name=(
+            organism_name
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
     numts,assembly,alignment_scores=visualize_func.get_dfs(organism_name=organism_name)
     sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
     links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)

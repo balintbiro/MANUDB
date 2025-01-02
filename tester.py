@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import numpy as np
 import pandas as pd
@@ -23,4 +24,13 @@ def get_names()->np.array:
     correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
     return correct_names.values
 
-print(np.random.choice(get_names(),1)[0].split('(')[0].strip().replace(' ','_'))
+def get_names():
+    with open("assemblies.json")as infile:
+        assemblies=json.load(infile)
+    names=pd.Series(assemblies.keys()).sort_values()
+    name_conversion=pd.read_csv("name_conversion.txt")
+    overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+    correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+    return correct_names
+
+print(get_names())
