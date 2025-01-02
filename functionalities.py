@@ -135,17 +135,19 @@ class Export:
         List the names that can be used to query the DB with this method.
         """
         names=(
-                pd
-                .read_sql_query("SELECT id FROM location",con=self.connection)
-                ["id"]
-                .str.split("_")
-                .str[:2]
-                .str.join("_")
-                .drop_duplicates()
-                .sort_values()
-                .values
-            )
-        return names
+            pd
+            .read_sql_query("SELECT id FROM location",con=self.connection)
+            ["id"]
+            .str.split("_")
+            .str[:2]
+            .str.join("_")
+            .drop_duplicates()
+            .sort_values()
+        )
+        name_conversion=pd.read_csv("name_conversion.txt")
+        overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+        correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+        return correct_names.values
 
     def get_downloadable(self,organism_name:str,queries:dict,query=None)->None:
         """
