@@ -1,0 +1,193 @@
+scientific_name,common_name
+Ailuropoda melanoleuca,Giant panda
+Antechinus flavipes,Yellow-footed antechinus
+Aotus nancymaae,Nancy Ma's night monkey
+Apodemus sylvaticus,Wood mouse
+Artibeus jamaicensis,Jamaican fruit bat
+Balaenoptera acutorostrata,Common minke whale
+Balaenoptera musculus,Blue whale
+Bison bison,American bison
+Bos indicus,Zebu
+Bos javanicus,Banteng
+Bos mutus,Wild yak
+Bos taurus,Domestic cattle
+Bubalus bubalis,Water buffalo
+Budorcas taxicolor,Takin
+Callithrix jacchus,Common marmoset
+Callorhinus ursinus,Northern fur seal
+Camelus bactrianus,Bactrian camel
+Camelus dromedarius,Dromedary camel
+Camelus ferus,Wild Bactrian camel
+Canis lupus,Gray wolf
+Capra hircus,Domestic goat
+Carlito syrichta,Philippine tarsier
+Castor canadensis,North American beaver
+Cavia porcellus,Guinea pig
+Cebus imitator,Panamanian white-faced capuchin
+Ceratotherium simum,White rhinoceros
+Cercocebus atys,Sooty mangabey
+Cervus canadensis,Elk
+Cervus elaphus,Red deer
+Chinchilla lanigera,Long-tailed chinchilla
+Chionomys nivalis,European snow vole
+Chlorocebus sabaeus,Green monkey
+Choloepus didactylus,Linnaeus's two-toed sloth
+Chrysochloris asiatica,Cape golden mole
+Condylura cristata,Star-nosed mole
+Cricetulus griseus,Chinese hamster
+Dama dama,Fallow deer
+Dasypus novemcinctus,Nine-banded armadillo
+Delphinapterus leucas,Beluga whale
+Delphinus delphis,Common dolphin
+Desmodus rotundus,Common vampire bat
+Diceros bicornis,Black rhinoceros
+Dipodomys spectabilis,Banner-tailed kangaroo rat
+Dromiciops gliroides,Monito del monte
+Echinops telfairi,Lesser hedgehog tenrec
+Elephantulus edwardii,Cape rock elephant shrew
+Elephas maximus,Asian elephant
+Enhydra lutris,Sea otter
+Equus asinus,Donkey
+Equus caballus,Horse
+Erinaceus europaeus,European hedgehog
+Eubalaena glacialis,North Atlantic right whale
+Eumetopias jubatus,Steller sea lion
+Felis catus,Domestic cat
+Fukomys damarensis,Damaraland mole-rat
+Galeopterus variegatus,Sunda flying lemur
+Globicephala melas,Long-finned pilot whale
+Gorilla gorilla,Western gorilla
+Gracilinanus agilis,Agile gracile opossum
+Grammomys surdaster,African soft-furred rat
+Halichoerus grypus,Gray seal
+Heterocephalus glaber,Naked mole-rat
+Hippopotamus amphibius,Hippopotamus
+Hipposideros armiger,Great Himalayan leaf-nosed bat
+Homo sapiens,Human
+Hyaena hyaena,Striped hyena
+Ictidomys tridecemlineatus,Thirteen-lined ground squirrel
+Jaculus jaculus,Lesser Egyptian jerboa
+Kogia breviceps,Pygmy sperm whale
+Lagenorhynchus albirostris,White-beaked dolphin
+Lagenorhynchus obliquidens,Pacific white-sided dolphin
+Lemur catta,Ring-tailed lemur
+Leopardus geoffroyi,Geoffroy's cat
+Leptonychotes weddellii,Weddell seal
+Lepus europaeus,European hare
+Lipotes vexillifer,Yangtze river dolphin
+Lontra canadensis,North American river otter
+Loxodonta africana,African bush elephant
+Lutra lutra,Eurasian otter
+Lynx canadensis,Canada lynx
+Lynx rufus,Bobcat
+Macaca fascicularis,Crab-eating macaque
+Macaca mulatta,Rhesus macaque
+Macaca nemestrina,Southern pig-tailed macaque
+Macaca thibetana,Tibetan macaque
+Mandrillus leucophaeus,Drill
+Manis javanica,Sunda pangolin
+Manis pentadactyla,Chinese pangolin
+Marmota flaviventris,Yellow-bellied marmot
+Marmota monax,Groundhog
+Mastomys coucha,Southern multimammate mouse
+Meles meles,European badger
+Meriones unguiculatus,Mongolian gerbil
+Mesocricetus auratus,Golden hamster
+Mesoplodon densirostris,Blainville's beaked whale
+Microcebus murinus,Gray mouse lemur
+Microtus fortis,Reed vole
+Microtus ochrogaster,Prairie vole
+Mirounga leonina,Southern elephant seal
+Molossus molossus,Common mastiff bat
+Monodelphis domestica,Gray short-tailed opossum
+Monodon monoceros,Narwhal
+Moschus berezovskii,Forest musk deer
+Muntiacus reevesi,Reeves's muntjac
+Mus caroli,Carol's mouse
+Mus musculus,House mouse
+Mus pahari,Shrew-like mouse
+Mustela erminea,Stoat
+Mustela lutreola,European mink
+Mustela nigripes,Black-footed ferret
+Mustela putorius,Polecat
+Myodes glareolus,Bank vole
+Myotis brandtii,Brandt's bat
+Myotis davidii,David's myotis
+Myotis lucifugus,Little brown bat
+Myotis myotis,Greater mouse-eared bat
+Nannospalax galili,Galili mole rat
+Neofelis nebulosa,Clouded leopard
+Neogale vison,American mink
+Neophocaena asiaeorientalis,Yangtze finless porpoise
+Nomascus leucogenys,Northern white-cheeked gibbon
+Nyctereutes procyonoides,Raccoon dog
+Nycticebus coucang,Sunda slow loris
+Ochotona curzoniae,Plateau pika
+Ochotona princeps,American pika
+Octodon degus,Degu
+Odobenus rosmarus,Walrus
+Odocoileus virginianus,White-tailed deer
+Orcinus orca,Orca
+Ornithorhynchus anatinus,Platypus
+Orycteropus afer,Aardvark
+Oryctolagus cuniculus,European rabbit
+Oryx dammah,Scimitar oryx
+Ovis aries,Domestic sheep
+Pan paniscus,Bonobo
+Pan troglodytes,Chimpanzee
+Panthera leo,Lion
+Panthera onca,Jaguar
+Panthera pardus,Leopard
+Panthera tigris,Tiger
+Papio anubis,Olive baboon
+Peromyscus eremicus,Cactus mouse
+Peromyscus leucopus,White-footed mouse
+Peromyscus maniculatus,Deer mouse
+Phacochoerus africanus,Warthog
+Phascolarctos cinereus,Koala
+Phoca vitulina,Harbor seal
+Phocoena phocoena,Harbor porpoise
+Phocoena sinus,Vaquita
+Phodopus roborovskii,Roborovski dwarf hamster
+Phyllostomus discolor,Pale spear-nosed bat
+Physeter catodon,Sperm whale
+Pongo abelii,Sumatran orangutan
+Pongo pygmaeus,Bornean orangutan
+Prionailurus bengalensis,Leopard cat
+Prionailurus viverrinus,Fishing cat
+Propithecus coquereli,Coquerel's sifaka
+Psammomys obesus,Fat sand rat
+Pteropus alecto,Black flying fox
+Pteropus vampyrus,Large flying fox
+Puma concolor,Cougar
+Puma yagouaroundi,Jaguarundi
+Rattus norvegicus,Brown rat
+Rattus rattus,Black rat
+Rhinolophus ferrumequinum,Greater horseshoe bat
+Rhinopithecus bieti,Black snub-nosed monkey
+Rhinopithecus roxellana,Golden snub-nosed monkey
+Rousettus aegyptiacus,Egyptian fruit bat
+Saccopteryx leptura,Greater sac-winged bat
+Saimiri boliviensis,Bolivian squirrel monkey
+Sapajus apella,Tufted capuchin
+Sciurus carolinensis,Eastern gray squirrel
+Sorex araneus,Common shrew
+Suricata suricatta,Meerkat
+Sus scrofa,Wild boar
+Symphalangus syndactylus,Siamang
+Tachyglossus aculeatus,Short-beaked echidna
+Talpa occidentalis,Iberian mole
+Theropithecus gelada,Gelada
+Trachypithecus francoisi,François' langur
+Trichechus manatus,West Indian manatee
+Trichosurus vulpecula,Common brushtail possum
+Tursiops truncatus,Bottlenose dolphin
+Urocitellus parryii,Arctic ground squirrel
+Ursus americanus,American black bear
+Ursus arctos,Brown bear
+Ursus maritimus,Polar bear
+Vicugna pacos,Alpaca
+Vombatus ursinus,Common wombat
+Vulpes lagopus,Arctic fox
+Vulpes vulpes,Red fox
+Zalophus californianus,California sea lion
