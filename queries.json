@@ -4,5 +4,6 @@
     "Location": "SELECT * FROM location WHERE id LIKE '%{organism_name}%'",
     "Gene": "SELECT * FROM genes WHERE id LIKE '%{organism_name}%'",
     "Sequence (genomic)": "None",
-    "Sequence (mitochondrial)": "Nones"
+    "Sequence (mitochondrial)": "Nones",
+    "All": "SELECT statistic.id,statistic.eg2_value,statistic.e_value,statistic.seq_identity,statistic.alignment_score, location.genomic_id,location.genomic_start,location.mitochondrial_start,location.genomic_length,location.mitochondrial_length,location.genomic_strand,location.mitochondrial_strand, genes.gene, genes.mt_gene FROM statistic LEFT JOIN location ON statistic.id=location.id LEFT JOIN genes ON statistic.id=genes.id WHERE statistic.id LIKE '%{organism_name}%'"
 }

@@ -155,12 +155,12 @@ class Export:
         def convert_df(df):
             return df.to_csv(index=False).encode('utf-8')
         if query!=None:
-            if (query not in ["Sequence (genomic)","Sequence (mitochondrial)"]):
+            if (query not in ["Sequence (genomic)","Sequence (mitochondrial)","All"]):
                 csv = convert_df(pd.read_sql_query(
                     queries[query].format(organism_name=organism_name.lower()),
                     self.connection
                 ))
-            else:
+            elif query in ["Sequence (genomic)","Sequence (mitochondrial)"]:
                 if query=="Sequence (genomic)":
                     df=pd.read_csv("genomic_sequences.csv",index_col="id")
                     df=df[df.index.str.contains(organism_name)]
@@ -171,6 +171,20 @@ class Export:
                     df=df[df.index.str.contains(organism_name)]
                     df['id']=df.index
                     csv=convert_df(df)
+            else:
+                gdf=pd.read_csv("genomic_sequences.csv",index_col="id")
+                gdf=gdf[gdf.index.str.contains(organism_name)]
+
+                mtdf=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
+                mtdf=mtdf[mtdf.index.str.contains(organism_name)]
+
+                others=pd.read_sql_query(
+                    queries[query].format(organism_name=organism_name.lower()),
+                    self.connection
+                )
+
+                df=gdf.join(mtdf).join(others.set_index("id"))
+                csv=convert_df(df)
             if csv:
                 st.download_button(
                     f"Download {organism_name.lower().replace(' ','_')}_numts.csv",
