@@ -77,7 +77,6 @@ class MANUDB:
             During the export one can download 14 features (e value, genomic identifier, genomic start position, mitochondrial start position, genomic length,
             mitochondrial length, genomic strand, mitochondrial strand, genomic size, genomic sequence, mitochondrial sequence, genus name, family name and order name).
             Furthermore, MANUDB makes specific NUMT visualizations accessible in downloadable format.
-            It is also possible with MANUDB to perform NUMT predictions on .fasta style sequences.
             </div>''',
             unsafe_allow_html=True
         )
