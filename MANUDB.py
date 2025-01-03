@@ -137,7 +137,7 @@ if organism_name!=None:
             key="multiselect",
             placeholder="Please select the field(s) you would like to retrieve"
         )
-    if fields_to_retrieve!=None:
+    if (fields_to_retrieve!=None) and (len(fields_to_retrieve)>0):
         if (
                 (fields_to_retrieve!=["all"])
                 and ("all" not in fields_to_retrieve)
