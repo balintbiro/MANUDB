@@ -209,7 +209,7 @@ if organism_name!=None:
             mime=mimes[plot_format]
         )
 
-connection=sqlite3.connect('MANUDBrev.db')
+
 st.subheader("Comparative usecase")
 compare=Compare(connection=connection)
 compare.describe_functionality()

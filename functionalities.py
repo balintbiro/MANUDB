@@ -266,16 +266,13 @@ class Visualize:
         with open('queries.json')as json_file:
             queries=json.load(json_file)
         #connect to DB and initialize cursor
-        connection=sqlite3.connect('MANUDBrev.db')
+        connection=sqlite3.connect('MANUDBrev2.db')
         cursor=connection.cursor()
         numts=pd.read_sql_query(
-            queries['Location'].format(organism_name=organism_name.replace(' ','_')),
+            queries['All'].format(organism_name=organism_name.replace(' ','_')),
             connection
         )
-        seq_identity=pd.read_sql_query(
-            queries['Statistic'].format(organism_name=organism_name.replace(' ','_')),
-            connection
-        )["seq_identity"]*100
+        seq_identity=numts["seq_identity"]*100
         #alignment_scores=alignment_scores/numts["genomic_length"]
         with open('assemblies.json')as infile:
             assemblies=json.load(infile)
@@ -455,7 +452,7 @@ class Compare:
         ]
 
     def get_compdf(self,MtSizes:pd.Series,orgs:list)->tuple:
-        Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
+        Compdf=pd.read_sql_query(f"SELECT * FROM general_info WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
         Compdf["SpeciesFull"]=Compdf["id"].str.split("_").str[:2].str.join("_")
         Compdf=Compdf.groupby(by="SpeciesFull").apply(
             lambda subdf:
