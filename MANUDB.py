@@ -132,14 +132,14 @@ if organism_name!=None:
             .strip()
             .replace(' ','_')
         )
-    numts,assembly,alignment_scores=visualize_func.get_dfs(organism_name=organism_name)
+    numts,assembly,seq_identity=visualize_func.get_dfs(organism_name=organism_name)
     sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
     links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)
     size_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,))
     size_heatmap.index=sectors.index
     count_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,True,))
     count_heatmap.index=sectors.index
-    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap,alignment_scores=alignment_scores)
+    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap,seq_identity=seq_identity)
     st.pyplot(fig=fig)
     plot_format=st.selectbox(
         label='Please select a format that you wish to download',
@@ -230,3 +230,4 @@ if (org1!=None) and (org2!=None):
 
     plt.tight_layout()
     st.pyplot(fig)
+    st.dataframe(Identitydf)

@@ -2,6 +2,7 @@ import json
 import sqlite3
 import numpy as np
 import pandas as pd
+import streamlit as st
 
 connection=sqlite3.connect('MANUDBrev.db')
 
@@ -44,4 +45,6 @@ def get_names()->np.array:
     correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
     return correct_names.values
 
-print(get_names())
+st.write(get_names())
+FF=st.multiselect(options=["A","B","C"],label="Select")
+st.write(FF)
