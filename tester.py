@@ -1,27 +1,29 @@
-import json
-import sqlite3
-import numpy as np
-import pandas as pd
 import streamlit as st
 
-connection=sqlite3.connect('MANUDBrev.db')
+# List of options
+options = ["A", "B", "C", "D"]
 
-trial=pd.read_sql_query("SELECT * FROM Statistic",connection)
+# Initialize session state to track the selected items
+if "selected" not in st.session_state:
+    st.session_state.selected = []
 
-if "available_options" not in st.session_state:
-    st.session_state.available_options = trial.columns#alignemtn score, evalue, e2value, id, seq_identity
-if "selected_items" not in st.session_state:
-    st.session_state.selected_items = []
+# Function to determine available options based on selection
+def get_available_options(selected):
+    if "D" in selected:
+        # If "D" is selected, disable "A", "B", and "C"
+        return [option for option in options if option == "D"]
+    else:
+        return options
 
-def update_selection(selected):
-    st.session_state.selected_items = selected
-    st.session_state.available_options = [
-        item for item in trial.columns
-        if item not in selected
-    ]
+# Get the available options based on the current selection
+available_options = get_available_options(st.session_state.selected)
 
-columns=st.multiselect(
-		label="Sample",options=st.session_state.available_options
-	)
+# Display multiselect widget with dynamic options
+st.session_state.selected = st.multiselect(
+    "Select your options:",
+    available_options,
+    default=st.session_state.selected
+)
 
-st.dataframe(trial[columns])
+# Display the selected items
+st.write("You selected:", st.session_state.selected)

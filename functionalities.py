@@ -135,7 +135,7 @@ class Export:
         """
         names=(
             pd
-            .read_sql_query("SELECT id FROM location",con=self.connection)
+            .read_sql_query("SELECT id FROM general_info",con=self.connection)
             ["id"]
             .str.split("_")
             .str[:2]
@@ -148,43 +148,14 @@ class Export:
         correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
         return correct_names.values
 
-    def get_downloadable(self,organism_name:str,queries:dict,query=None)->None:
+    def get_downloadable(self,organism_name:str,df:pd.DataFrame)->None:
         """
         Query SQL and load the part into a df which can be downloaded into a csv file.
         """
         def convert_df(df):
             return df.to_csv(index=False).encode('utf-8')
-        if query!=None:
-            if (query not in ["Sequence (genomic)","Sequence (mitochondrial)","All"]):
-                csv = convert_df(pd.read_sql_query(
-                    queries[query].format(organism_name=organism_name.lower()),
-                    self.connection
-                ))
-            elif query in ["Sequence (genomic)","Sequence (mitochondrial)"]:
-                if query=="Sequence (genomic)":
-                    df=pd.read_csv("genomic_sequences.csv",index_col="id")
-                    df=df[df.index.str.contains(organism_name)]
-                    df['id']=df.index
-                    csv=convert_df(df)
-                elif query=="Sequence (mitochondrial)":
-                    df=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
-                    df=df[df.index.str.contains(organism_name)]
-                    df['id']=df.index
-                    csv=convert_df(df)
-            else:
-                gdf=pd.read_csv("genomic_sequences.csv",index_col="id")
-                gdf=gdf[gdf.index.str.contains(organism_name)]
-
-                mtdf=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
-                mtdf=mtdf[mtdf.index.str.contains(organism_name)]
-
-                others=pd.read_sql_query(
-                    queries[query].format(organism_name=organism_name.lower()),
-                    self.connection
-                )
-
-                df=gdf.join(mtdf).join(others.set_index("id"))
-                csv=convert_df(df)
+        if df.shape[0]!=0:
+            csv=convert_df(df)
             if csv:
                 st.download_button(
                     f"Download {organism_name.lower().replace(' ','_')}_numts.csv",
