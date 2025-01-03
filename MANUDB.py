@@ -139,7 +139,11 @@ if organism_name!=None:
     size_heatmap.index=sectors.index
     count_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,True,))
     count_heatmap.index=sectors.index
-    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap,seq_identity=seq_identity)
+    fig=visualize_func.plotter(
+            numts=numts,sectors=sectors,links=links,
+            organism_name=organism_name,size_heatmap=size_heatmap,
+            count_heatmap=count_heatmap,seq_identity=seq_identity
+        )
     st.pyplot(fig=fig)
     plot_format=st.selectbox(
         label='Please select a format that you wish to download',
