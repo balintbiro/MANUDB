@@ -11,9 +11,11 @@ from itertools import product
 import matplotlib.pyplot as plt
 from sklearn.metrics import pairwise_distances
 
+from functionalities import Visualize
+
 visualize_func=Visualize()
 organism_name="Rattus_norvegicus"
-numts,assembly,alignment_scores=visualize_func.get_dfs(organism_name=organism_name)
+numts,assembly,seq_identity=visualize_func.get_dfs(organism_name=organism_name)
 
 sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
 links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)
@@ -35,7 +37,7 @@ def add_cbar(values:list,title:str,cbar_pos:tuple,cmap_name,ax)->None:
     cbar.ax.yaxis.label.set_position((0.5,1.2))
     cbar.ax.yaxis.set_tick_params(labelsize=6)
 
-def plotter(numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap:pd.Series,alignment_scores:pd.Series)->None:
+def plotter(numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap:pd.Series,seq_identity:pd.Series)->None:
     fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
     circos=Circos(sectors,space=2)
     fontsize=8
@@ -56,16 +58,16 @@ def plotter(numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_he
         hms_track.axis(fc="none")
         hms_track.heatmap(count_heatmap[sector.name],cmap="Greys")
     cmap=plt.cm.coolwarm
-    norm=matplotlib.colors.Normalize(vmin=min(alignment_scores),vmax=max(alignment_scores))
+    norm=matplotlib.colors.Normalize(vmin=min(seq_identity),vmax=max(seq_identity))
     sm=matplotlib.cm.ScalarMappable(cmap="seismic",norm=norm)
     for index,link in enumerate(links):
-        circos.link(link[0],link[1],color=cmap(norm(alignment_scores[index])))
+        circos.link(link[0],link[1],color=cmap(norm(seq_identity[index])))
     circos.plotfig(ax=ax)
     plt.title(f"",x=.5,y=1.1)
-    add_cbar(values=alignment_scores,title="Alignment score",cbar_pos=(-.1,.7,0.015,0.1),cmap_name="coolwarm",ax=ax)
+    add_cbar(values=seq_identity,title="Sequence identity (%)",cbar_pos=(-.1,.7,0.015,0.1),cmap_name="coolwarm",ax=ax)
     add_cbar(values=np.concatenate(size_heatmap.values),title="NUMT size (bp)",cbar_pos=(-.1,.5,0.015,0.1),cmap_name="Greens",ax=ax)
     add_cbar(values=np.concatenate(count_heatmap.values),title="NUMT count",cbar_pos=(-.1,.3,0.015,0.1),cmap_name="Greys",ax=ax)
     return fig
 
-plotter(numts,sectors,links,"Rattus_norvegicus",size_heatmap,count_heatmap,alignment_scores)
-plt.savefig("SampleSingleSpeciesUseCase.png",dpi=400)
+plotter(numts,sectors,links,"Rattus_norvegicus",size_heatmap,count_heatmap,seq_identity)
+plt.savefig("SampleSingleSpeciesUseCase_revbased.png",dpi=400)

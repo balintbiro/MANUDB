@@ -77,7 +77,6 @@ class MANUDB:
             During the export one can download 14 features (e value, genomic identifier, genomic start position, mitochondrial start position, genomic length,
             mitochondrial length, genomic strand, mitochondrial strand, genomic size, genomic sequence, mitochondrial sequence, genus name, family name and order name).
             Furthermore, MANUDB makes specific NUMT visualizations accessible in downloadable format.
-            It is also possible with MANUDB to perform NUMT predictions on .fasta style sequences.
             </div>''',
             unsafe_allow_html=True
         )
@@ -135,41 +134,28 @@ class Export:
         List the names that can be used to query the DB with this method.
         """
         names=(
-                pd
-                .read_sql_query("SELECT id FROM location",con=self.connection)
-                ["id"]
-                .str.split("_")
-                .str[:2]
-                .str.join("_")
-                .drop_duplicates()
-                .sort_values()
-                .values
-            )
-        return names
+            pd
+            .read_sql_query("SELECT id FROM general_info",con=self.connection)
+            ["id"]
+            .str.split("_")
+            .str[:2]
+            .str.join("_")
+            .drop_duplicates()
+            .sort_values()
+        )
+        name_conversion=pd.read_csv("name_conversion.txt")
+        overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+        correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+        return correct_names.values
 
-    def get_downloadable(self,organism_name:str,queries:dict,query=None)->None:
+    def get_downloadable(self,organism_name:str,df:pd.DataFrame)->None:
         """
         Query SQL and load the part into a df which can be downloaded into a csv file.
         """
         def convert_df(df):
             return df.to_csv(index=False).encode('utf-8')
-        if query!=None:
-            if (query not in ["Sequence (genomic)","Sequence (mitochondrial)"]):
-                csv = convert_df(pd.read_sql_query(
-                    queries[query].format(organism_name=organism_name.lower()),
-                    self.connection
-                ))
-            else:
-                if query=="Sequence (genomic)":
-                    df=pd.read_csv("genomic_sequences.csv",index_col="id")
-                    df=df[df.index.str.contains(organism_name)]
-                    df['id']=df.index
-                    csv=convert_df(df)
-                elif query=="Sequence (mitochondrial)":
-                    df=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
-                    df=df[df.index.str.contains(organism_name)]
-                    df['id']=df.index
-                    csv=convert_df(df)
+        if df.shape[0]!=0:
+            csv=convert_df(df)
             if csv:
                 st.download_button(
                     f"Download {organism_name.lower().replace(' ','_')}_numts.csv",
@@ -270,23 +256,24 @@ class Visualize:
     def get_names(self):
         with open("assemblies.json")as infile:
             assemblies=json.load(infile)
-        return pd.Series(assemblies.keys()).sort_values()
+        names=pd.Series(assemblies.keys()).sort_values()
+        name_conversion=pd.read_csv("name_conversion.txt")
+        overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+        correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+        return correct_names.values
     
     def get_dfs(self,organism_name)->tuple:
         with open('queries.json')as json_file:
             queries=json.load(json_file)
         #connect to DB and initialize cursor
-        connection=sqlite3.connect('MANUDBrev.db')
+        connection=sqlite3.connect('MANUDBrev2.db')
         cursor=connection.cursor()
         numts=pd.read_sql_query(
-            queries['Location'].format(organism_name=organism_name.replace(' ','_')),
+            queries['All'].format(organism_name=organism_name.replace(' ','_')),
             connection
         )
-        alignment_scores=pd.read_sql_query(
-            queries['Statistic'].format(organism_name=organism_name.replace(' ','_')),
-            connection
-        )["alignment_score"]
-        alignment_scores=alignment_scores/numts["genomic_length"]
+        seq_identity=numts["seq_identity"]*100
+        #alignment_scores=alignment_scores/numts["genomic_length"]
         with open('assemblies.json')as infile:
             assemblies=json.load(infile)
         assembly=assemblies[organism_name.replace(' ','_')]
@@ -304,7 +291,7 @@ class Visualize:
         numts['molecule']=numts['genomic_id'].apply(lambda gid: mapper.get(gid,np.nan)).values#mapper[numts['genomic_id'].values].values
         numts=numts.dropna(subset=['molecule'])
         connection.close()
-        return (numts,assembly,alignment_scores)
+        return (numts,assembly,seq_identity)
     
     def get_sectors(self,assembly:pd.DataFrame)->dict:
         assembly['length']=assembly['length'].astype(int)
@@ -391,7 +378,7 @@ class Visualize:
         cbar.ax.yaxis.label.set_position((0.5,1.2))
         cbar.ax.yaxis.set_tick_params(labelsize=6)
 
-    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap:pd.Series,alignment_scores:pd.Series)->None:
+    def plotter(self,numts:pd.DataFrame,sectors:dict,links:list,organism_name:str,size_heatmap:pd.Series,count_heatmap:pd.Series,seq_identity:pd.Series)->None:
         fig,ax=plt.subplots(1,1,figsize=(7,7),subplot_kw={'projection': 'polar'})
         circos=Circos(sectors,space=2)
         fontsize=8
@@ -412,13 +399,13 @@ class Visualize:
             hms_track.axis(fc="none")
             hms_track.heatmap(count_heatmap[sector.name],cmap="Greys")
         cmap=plt.cm.coolwarm
-        norm=matplotlib.colors.Normalize(vmin=min(alignment_scores),vmax=max(alignment_scores))
+        norm=matplotlib.colors.Normalize(vmin=min(seq_identity),vmax=max(seq_identity))
         sm=matplotlib.cm.ScalarMappable(cmap="seismic",norm=norm)
         for index,link in enumerate(links):
-            circos.link(link[0],link[1],color=cmap(norm(alignment_scores[index])))
+            circos.link(link[0],link[1],color=cmap(norm(seq_identity[index])))
         circos.plotfig(ax=ax)
         plt.title(f"{organism_name.replace('_',' ')} NUMTs - MANUDB",x=.5,y=1.1)
-        self.add_cbar(values=alignment_scores,title="Alignment score",cbar_pos=(-.1,.7,0.015,0.1),cmap_name="coolwarm",ax=ax)
+        self.add_cbar(values=seq_identity,title="Sequence identity (%)",cbar_pos=(-.1,.7,0.015,0.1),cmap_name="coolwarm",ax=ax)
         self.add_cbar(values=np.concatenate(size_heatmap.values),title="NUMT size (bp)",cbar_pos=(-.1,.5,0.015,0.1),cmap_name="Greens",ax=ax)
         self.add_cbar(values=np.concatenate(count_heatmap.values),title="NUMT count",cbar_pos=(-.1,.3,0.015,0.1),cmap_name="Greys",ax=ax)
         return fig
@@ -448,12 +435,15 @@ class Compare:
         )
 
     def get_names(self)->np.array:
-        return (
+        names=(
                 pd
                 .read_csv("MtSizes.csv")["orgname"]
                 .sort_values()
-                .values
             )
+        name_conversion=pd.read_csv("name_conversion.txt")
+        overlap=name_conversion[name_conversion["scientific_name"].isin(names.str.replace('_',' ').values)]
+        correct_names=overlap["scientific_name"]+' '+'('+overlap["common_name"]+')'
+        return correct_names.values
 
     def get_shortnames(self,orgs:list)->list:
         return [
@@ -462,7 +452,7 @@ class Compare:
         ]
 
     def get_compdf(self,MtSizes:pd.Series,orgs:list)->tuple:
-        Compdf=pd.read_sql_query(f"SELECT * FROM location WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
+        Compdf=pd.read_sql_query(f"SELECT * FROM general_info WHERE id LIKE '{orgs[0]}%' OR id LIKE '{orgs[1]}%'",con=self.connection)
         Compdf["SpeciesFull"]=Compdf["id"].str.split("_").str[:2].str.join("_")
         Compdf=Compdf.groupby(by="SpeciesFull").apply(
             lambda subdf:

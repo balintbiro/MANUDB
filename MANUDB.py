@@ -73,7 +73,7 @@ with st.sidebar:
 
 #########################################################################Export function
 #connect to DB and initialize cursor
-connection=sqlite3.connect('MANUDBrev.db')
+connection=sqlite3.connect('MANUDBrev2.db')
 
 st.divider()
 export_func=Export(connection=connection)
@@ -90,18 +90,71 @@ organism_name=st.selectbox(
 )
 
 if organism_name!=None:
-    with open('queries.json')as json_file:
-        queries=json.load(json_file)
+    #modify the variable so it will be in the same form as the SQL uses it
+    organism_name=(
+            organism_name
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
+    general_info=pd.read_sql_query(
+            f"SELECT * FROM general_info WHERE organism_name LIKE '%{organism_name}%'",
+            connection
+        )
+    mt_genes=pd.read_sql_query(
+            f"SELECT * FROM mt_gene WHERE id LIKE '%{organism_name}%'",
+            connection
+        )
+    genes=pd.read_sql_query(
+            f"SELECT * FROM gene WHERE id LIKE '%{organism_name}%'",
+            connection
+        )
+    taxonomy=pd.read_sql_query(
+            f"SELECT * FROM taxonomy WHERE organism_name LIKE '%{organism_name}%'",
+            connection
+        )
+    gdf=pd.read_csv("genomic_sequences.csv",index_col="id")
+    gdf=gdf[gdf.index.str.contains(organism_name)]
 
-    query=st.selectbox(
-        label='Please select table(s)',
-        placeholder='Please select table(s)',
-        index=None,
-        options=queries.keys(),
-        key='table_selection'
+    mtdf=pd.read_csv("mitochondrial_sequences.csv",index_col="id")
+    mtdf=mtdf[mtdf.index.str.contains(organism_name)]
+
+    merged=(
+        general_info
+        .join(mt_genes.set_index("id"),on="id")
+        .join(genes.set_index("id"),on="id")
+        .join(gdf,on="id")
+        .join(mtdf,on="id")
+        .join(taxonomy.set_index("organism_name"),on="organism_name")
     )
-    if query!=None:
-        export_func.get_downloadable(organism_name=organism_name,queries=queries,query=query)
+
+    all_columns=pd.Series(merged.columns).sort_values()
+
+    fields_to_retrieve=st.multiselect(
+            label=" ",
+            options=np.concatenate([all_columns,["all"]]),
+            default=None,
+            key="multiselect",
+            placeholder="Please select the field(s) you would like to retrieve"
+        )
+    if fields_to_retrieve!=None:
+        if (
+                (fields_to_retrieve!=["all"])
+                and ("all" not in fields_to_retrieve)
+                and (len(set(fields_to_retrieve)&set(taxonomy.drop(columns=["organism_name"])))==0)
+            ):
+            #export_func.get_downloadable(organism_name=organism_name,queries=queries,query=query)
+            df=merged[fields_to_retrieve]
+        else:
+            st.warning("""Please note that the fields of the taxonomy table
+                ("taxonomy_order", "genus", "family", "assembly_version") will be 
+                redundant in the resulting .csv file!\n\nThis 
+                is due to the fact that there is a 'many to one' relationship between other fields 
+                and the fields of the taxonomy table. For further information about 
+                the SQL schema, please see the corresponding article.""")
+            df=merged[all_columns]
+        export_func.get_downloadable(organism_name=organism_name,df=df)
+
 #########################################################################Visualize function
 st.divider()
 st.header("Visualize")
@@ -118,14 +171,25 @@ organism_name=st.selectbox(
 )
 #st.set_option('deprecation.showPyplotGlobalUse', False)
 if organism_name!=None:
-    numts,assembly,alignment_scores=visualize_func.get_dfs(organism_name=organism_name)
+    #modify the variable so it will be in the same form as the SQL uses it
+    organism_name=(
+            organism_name
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
+    numts,assembly,seq_identity=visualize_func.get_dfs(organism_name=organism_name)
     sectors,MtScaler=visualize_func.get_sectors(assembly=assembly)
     links=visualize_func.get_links(numts=numts,assembly=assembly,MtScaler=MtScaler)
     size_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,))
     size_heatmap.index=sectors.index
     count_heatmap=pd.Series(sectors.index).apply(visualize_func.heatmap,args=(numts,sectors,MtScaler,True,))
     count_heatmap.index=sectors.index
-    fig=visualize_func.plotter(numts=numts,sectors=sectors,links=links,organism_name=organism_name,size_heatmap=size_heatmap,count_heatmap=count_heatmap,alignment_scores=alignment_scores)
+    fig=visualize_func.plotter(
+            numts=numts,sectors=sectors,links=links,
+            organism_name=organism_name,size_heatmap=size_heatmap,
+            count_heatmap=count_heatmap,seq_identity=seq_identity
+        )
     st.pyplot(fig=fig)
     plot_format=st.selectbox(
         label='Please select a format that you wish to download',
@@ -144,6 +208,7 @@ if organism_name!=None:
             file_name=f'MANUDB_{organism_name}_NUMTs.{plot_format}',
             mime=mimes[plot_format]
         )
+
 
 st.subheader("Comparative usecase")
 compare=Compare(connection=connection)
@@ -170,6 +235,18 @@ with col2:
     )
 MtSizes=pd.read_csv("MtSizes.csv",index_col=0)["mt_size"]
 if (org1!=None) and (org2!=None):
+    org1=(
+            org1
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
+    org2=(
+            org2
+            .split('(')[0]
+            .strip()
+            .replace(' ','_')
+        )
     orgs=[org1,org2]
     Compdf=compare.get_compdf(MtSizes=MtSizes,orgs=orgs)
     Identitydf=compare.get_seq_identity(orgs=orgs)
