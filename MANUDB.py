@@ -154,7 +154,6 @@ if organism_name!=None:
                 the SQL schema, please see the corresponding article.""")
             df=merged[all_columns]
         export_func.get_downloadable(organism_name=organism_name,df=df)
-        st.write(fields_to_retrieve)
 
 #########################################################################Visualize function
 st.divider()
