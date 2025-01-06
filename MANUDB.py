@@ -154,11 +154,12 @@ if organism_name!=None:
                 the SQL schema, please see the corresponding article.""")
             df=merged[all_columns]
         export_func.get_downloadable(organism_name=organism_name,df=df)
+        st.write(fields_to_retrieve)
 
 #########################################################################Visualize function
 st.divider()
 st.header("Visualize")
-st.subheader("Single species usecase")
+st.subheader("Single species use case")
 visualize_func=Visualize()
 visualize_func.describe_functionality()
 
@@ -210,7 +211,7 @@ if organism_name!=None:
         )
 
 
-st.subheader("Comparative usecase")
+st.subheader("Comparative use case")
 compare=Compare(connection=connection)
 compare.describe_functionality()
 col1,col2=st.columns(2)
