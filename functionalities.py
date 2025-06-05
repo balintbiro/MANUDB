@@ -98,7 +98,9 @@ class MANUDB:
         return st.markdown(
             '''<div style="text-align: justify;">
             Biró, B., Gál, Z., Fekete, Z., Klecska, E., & Hoffmann, O. I. (2024). <a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-024-10201-9">
-            Mitochondrial genome plasticity of mammalian species.</a> BMC genomics, 25(1), 278.
+            Mitochondrial genome plasticity of mammalian species.</a> BMC genomics, 25(1), 278.<br>
+            Biró, B., Gál, Z., Nagy, Zs., Garcia, J., F., Batbold, T., A., Hoffmann, O. (2025). <a href="https://academic.oup.com/database/article/doi/10.1093/database/baaf009/8030044">
+            MANUDB: database and application to retrieve and visualize mammalian NUMTs.</a> DATABASE, 2025, baaf009.
             </div>''',
             unsafe_allow_html=True
         )
