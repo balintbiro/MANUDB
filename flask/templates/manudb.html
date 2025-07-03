@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}MANUDB{% endblock %}
+{% block content %}
+<h1>MANUDB Page</h1>
+<p>Enter a number to calculate 2 to the power of that number:</p>
+
+<form method="POST">
+    <input type="number" name="number" required>
+    <button type="submit">Calculate</button>
+</form>
+
+{% if result is not none %}
+    <p><strong>Result:</strong> {{ result }}</p>
+{% endif %}
+{% endblock %}
